@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+.gutter,
+.gutter-horizontal,
+.gutter-vertical {
+  background: #181c23;
+  cursor: col-resize;
+  width: 8px !important;
+  min-width: 8px !important;
+
+  position: relative;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  z-index: 10;
+}
+
+.gutter:hover,
+.gutter-horizontal:hover,
+.gutter-vertical:hover {
+  background: #23272f;
+  
+}
+
+.gutter::before,
+.gutter-horizontal::before,
+.gutter-vertical::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  background: none;
+  pointer-events: none;
+}
+
+.gutter::after,
+.gutter-horizontal::after,
+.gutter-vertical::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: 100% 3px;
+  opacity: 0.85;
+  pointer-events: none;
+}

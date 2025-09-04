@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model trades {
+  asset      String
+  price      Decimal  @db.Decimal
+  quantity   Decimal  @db.Decimal
+  trade_time DateTime @db.Timestamptz(6)
+
+  @@index([trade_time(sort: Desc)])
+  @@ignore
+}
+
+model User {
+  userId    Int       @id @default(autoincrement())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  phone     String?
+  balance   Float     @default(0)
+
+  positions Position[]
+}
+
+model Position {
+  positionId      Int      @id @default(autoincrement())
+  userId          Int 
+  asset           String
+  quantity        Float
+  margin          Float
+  leverage        Float
+  boughtPrice     Float
+  type            String
+  status          String   @default("open")
+  stopLoss        Float?
+  takeProfit      Float?
+  closedPrice     Float?
+  closedAt        DateTime?
+  liquidationPrice Float?
+  isLiquidated    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  fee             Float?
+  user User @relation(fields: [userId], references: [userId])
+}
