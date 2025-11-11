@@ -1,0 +1,68 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "0.0.0.0", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    restart: always
+    healthcheck:
+      test: ["CMD", "bash", "-c", "export KAFKA_BROKER=$(hostname -i); nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    volumes:
+      - ./scripts:/scripts:ro
+    command: ["bash", "-c", "sleep 10 && /scripts/create-kafka-topics.sh"]
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      POSTGRES_USER: sparsh
+      POSTGRES_PASSWORD: sparsh
+      POSTGRES_DB: timescale
+    ports:
+      - "5432:5432"
+    volumes:
+      - ts-data:/var/lib/postgresql/data
+      - ./scripts:/scripts:ro
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sparsh"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    command: ["bash", "-c", "sleep 10 && psql -U sparsh -d timescale -f /scripts/init-timescale-hypertables.sql && psql -U sparsh -d timescale -f /scripts/attach-timescale-policies.sql"]
+
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ts-data:

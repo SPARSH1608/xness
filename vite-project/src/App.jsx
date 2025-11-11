@@ -1,7 +1,7 @@
 import { SocketProvider } from './context/SocketContext'
 import { MarketProvider } from './context/MarketContext'
 import TradePage from './pages/TradePage'
-import { UserProvider } from './context/UserContext'
+import { UserProvider } from './context/userContext'
 
 function App() {
   return (

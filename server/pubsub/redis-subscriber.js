@@ -1,7 +1,7 @@
 const {createClient}=require('redis')
 
 async function startRedisSubscriber(io){
-    const redisSub=createClient({url:'redis://localhost:6379'})
+    const redisSub=createClient({url:'redis://localhost:6380'})
     
     redisSub.on('error',(err)=>{
         console.log('redis subscriber error',err)

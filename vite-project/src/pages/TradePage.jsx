@@ -9,7 +9,7 @@ import OrderPanel from "../components/OrderPanel"
 import PositionsOrdersPanel from "../components/PositionsOrdersPanel"
 import RecentTrades from "../components/RecentTrades"
 import { MarketProvider } from "../context/MarketContext"
-import { UserProvider } from "../context/UserContext"
+import { UserProvider } from "../context/userContext"
 import TopBar from "../components/TopBar"
 
 export default function Page() {

@@ -10,7 +10,7 @@ const kafkaProducer = kafkaClient.producer();
 
 async function createLongPosition(req, res) {
   const userId = Number(req.user.userId);
-  const { asset, leverage = 1, quantity, stopLoss, takeProfit } = req.body; // <-- add stopLoss, takeProfit
+  const { asset, leverage = 1, quantity, stopLoss, takeProfit } = req.body; 
 
   try {
     const priceStr = await redis.get(`price:${asset}`);
@@ -53,8 +53,8 @@ async function createLongPosition(req, res) {
           type: "long",
           status: "open",
           fee,
-          stopLoss: stopLoss ? Number(stopLoss) : null,       // <-- add
-          takeProfit: takeProfit ? Number(takeProfit) : null, // <-- add
+          stopLoss: stopLoss ? Number(stopLoss) : null,       
+          takeProfit: takeProfit ? Number(takeProfit) : null, 
         },
       });
     });
