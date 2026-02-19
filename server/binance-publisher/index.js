@@ -1,58 +1,58 @@
-const WebSocket=require('ws')
-const assets=['btcusdt','ethusdt','solusdt']
+const WebSocket = require('ws')
+const assets = ['btcusdt', 'ethusdt', 'solusdt']
 
-const {createClient} =require('redis')
-const redisClient=createClient({url:'redis://localhost:6380'})
+const { createClient } = require('redis')
+const redisClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
 
 
-const {Kafka}=require('kafkajs')
+const { Kafka } = require('kafkajs')
 
-const kafkaClient=new Kafka({
-    clientId:'binance-publisher',
-   brokers: ["localhost:9092"],
+const kafkaClient = new Kafka({
+    clientId: 'binance-publisher',
+    brokers: [(process.env.KAFKA_BROKER || "localhost:9092")],
 })
-const producer=kafkaClient.producer()
+const producer = kafkaClient.producer()
 
-module.exports.startBinanceStreams=async()=>{
+module.exports.startBinanceStreams = async () => {
     await redisClient.connect()
     await producer.connect()
-    assets.forEach(asset=>{
-        const streamUrl=`wss://stream.binance.com:9443/ws/${asset}@trade`
-        const ws=new WebSocket(streamUrl)
-        
-        ws.on('open',()=>{
+    assets.forEach(asset => {
+        const streamUrl = `wss://stream.binance.com:9443/ws/${asset}@trade`
+        const ws = new WebSocket(streamUrl)
+
+        ws.on('open', () => {
             console.log(`Connected to ${asset} stream`)
         })
-        ws.on('message',async(trade)=>{
+        ws.on('message', async (trade) => {
             // console.log(`New trade in ${asset} stream:`, JSON.parse(trade.toString()))
-            const tradeData=JSON.parse(trade.toString())
-            const payload={
-                asset:asset,
-                price:tradeData.p,
-                quantity:tradeData.q,
-                tradeTime:tradeData.T
+            const tradeData = JSON.parse(trade.toString())
+            const payload = {
+                asset: asset,
+                price: tradeData.p,
+                quantity: tradeData.q,
+                tradeTime: tradeData.T
             }
-            
-           const message=JSON.stringify(payload)
-        //    console.log(`New trade in ${asset} stream:`, message)
-        //    console.log(`Publishing message to Redis and Kafka`)
-           try{
-            await redisClient.publish('trades', message)
-            await redisClient.set(`price:${asset.toUpperCase()}`, tradeData.p);
-            await producer.send({
-                topic:'binance-trades',
-                messages:[
-                    {value:message}
-                ]
-            })
-           }catch(err){
-            console.error('Redis or kafka publish error:',err)
-           }
+
+            const message = JSON.stringify(payload)
+            //    console.log(`New trade in ${asset} stream:`, message)
+            //    console.log(`Publishing message to Redis and Kafka`)
+            try {
+                await redisClient.publish('trades', message)
+                await redisClient.set(`price:${asset.toUpperCase()}`, tradeData.p);
+                await producer.send({
+                    topic: 'binance-trades',
+                    messages: [
+                        { value: message }
+                    ]
+                })
+            } catch (err) {
+                console.error('Redis or kafka publish error:', err)
+            }
         })
-        ws.on('close',()=>{
+        ws.on('close', () => {
             console.log(`Disconnected from ${asset} stream`)
         })
-        ws.on('error',(error)=>{
+        ws.on('error', (error) => {
             console.error(`Error in ${asset} stream:`, error)
         })
     })

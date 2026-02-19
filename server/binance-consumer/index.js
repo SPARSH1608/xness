@@ -4,16 +4,16 @@ const { Kafka } = require('kafkajs')
 const { Client } = require('pg')
 const kafkaClient = new Kafka({
   clientId: 'binance-consumer',
-  brokers: ["localhost:9092"],
+  brokers: [(process.env.KAFKA_BROKER || "localhost:9092")],
 })
 const consumer = kafkaClient.consumer({ groupId: 'trade-group' })
 
 const pgClient = new Client({
-  user: 'sparsh',
-  host: 'localhost',
-  database: 'timescale',
-  password: 'sparsh',
-  port: 5432,
+  user: process.env.DB_USER || 'sparsh',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'timescale',
+  password: process.env.DB_PASSWORD || 'sparsh',
+  port: process.env.DB_PORT || 5432,
 })
 
 async function startBatchCycle() {
