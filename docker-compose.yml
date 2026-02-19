@@ -1,0 +1,159 @@
+version: '3.8'
+
+services:
+  # --- Frontend ---
+  frontend:
+    build:
+      context: ./vite-project
+      args:
+        # Pass build args from the .env file
+        VITE_BASE_API_URL: ${VITE_BASE_API_URL}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL}
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: always
+
+  # --- Backend Services ---
+  
+  # Main API Server
+  api:
+    build: 
+      context: ./server
+    command: sh -c "npx prisma migrate deploy && node index.js"
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - timescaledb
+      - redis
+      - kafka
+      - init-kafka
+    restart: always
+
+  # Binance Consumer Worker
+  consumer:
+    build: 
+      context: ./server
+    command: node binance-consumer/index.js
+    env_file:
+      - .env
+    environment:
+      # Explicitly map generic vars to what the consumer expects if needed,
+      # but the consumer code now reads these specific names (REDIS_URL, KAFKA_BROKER, etc.)
+      # We just need to make sure DB_USER etc are present if the consumer uses them.
+      # The consumer uses: DB_USER, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT
+      # So we map them from our .env values:
+      - DB_USER=${POSTGRES_USER}
+      - DB_HOST=timescaledb
+      - DB_NAME=${POSTGRES_DB}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PORT=5432
+    depends_on:
+      - timescaledb
+      - kafka
+      - init-kafka
+    restart: always
+
+  # Liquidation Cron Worker
+  cron:
+    build: 
+      context: ./server
+    command: node liquidationCron.js
+    env_file:
+      - .env
+    depends_on:
+      - timescaledb
+    restart: always
+
+  # --- Infrastructure ---
+  
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "0.0.0.0", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+    restart: always
+    healthcheck:
+      test: ["CMD", "bash", "-c", "export KAFKA_BROKER=$(hostname -i); nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    volumes:
+      - ./server/scripts:/scripts:ro
+
+  init-kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:29092 --list
+
+      echo -e 'Creating kafka topics'
+      /scripts/create-kafka-topics.sh
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:29092 --list
+      "
+    volumes:
+      - ./server/scripts:/scripts:ro
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ts-data:/var/lib/postgresql/data
+      - ./server/scripts/init-timescale-hypertables.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./server/scripts/attach-timescale-policies.sql:/docker-entrypoint-initdb.d/002_policies.sql:ro
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ts-data:

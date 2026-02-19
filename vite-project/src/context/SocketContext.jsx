@@ -9,12 +9,18 @@ export const SocketProvider = ({children}) => {
     const [liquidated, setLiquidated] = useState(null) // <-- add this
 
     useEffect(() => {
-        const s = io('http://localhost:3000', {transports:['websocket']})
+        const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+        const s = io(socketUrl, {transports:['websocket']})
         setSocket(s)
         s.on('connect', () => {
             setConnected(true)
-            s.emit('joinRoom', currentAsset)
+            // Emit joinRoom ONLY after connection is established and socket is ready
+            // We might need to handle this via the joinAssetRoom function or rethink the logic slightly
+            // But for now, let's keep it simple as before, but note that `currentAsset` dependency might be needed
             console.log('Socket connected:', s.id)
+            if (currentAsset) {
+                 s.emit('joinRoom', currentAsset)
+            }
         })
         s.on('disconnect', () => {
             setConnected(false)
