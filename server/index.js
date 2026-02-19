@@ -33,8 +33,11 @@ app.use('/api/auth', require('./routes/auth'))
 app.use('/api/candles', require('./routes/candles'))
 app.use('/api/positions', require('./routes/positions'))
 async function startServer() {
-    startRedisSubscriber(io)
-    startBinanceStreams()
+    setTimeout(() => {
+        startRedisSubscriber(io)
+        startBinanceStreams()
+    }, 5000)
+
     server.listen(3000, () => {
         console.log('Server is running on port 3000')
     })

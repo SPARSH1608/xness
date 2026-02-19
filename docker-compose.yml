@@ -21,7 +21,7 @@ services:
   api:
     build: 
       context: ./server
-    command: sh -c "npx prisma migrate deploy && node index.js"
+    command: sh -c "npx prisma db push && node index.js"
     ports:
       - "3000:3000"
     env_file:
@@ -71,7 +71,7 @@ services:
   # --- Infrastructure ---
   
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.0
+    image: confluentinc/cp-zookeeper:7.6.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -83,7 +83,7 @@ services:
       retries: 5
 
   kafka:
-    image: confluentinc/cp-kafka:7.3.0
+    image: confluentinc/cp-kafka:7.6.0
     depends_on:
       - zookeeper
     ports:
@@ -107,7 +107,7 @@ services:
       - ./server/scripts:/scripts:ro
 
   init-kafka:
-    image: confluentinc/cp-kafka:7.3.0
+    image: confluentinc/cp-kafka:7.6.0
     depends_on:
       - kafka
     entrypoint: [ '/bin/sh', '-c' ]

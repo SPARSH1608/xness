@@ -14,8 +14,29 @@ const kafkaClient = new Kafka({
 const producer = kafkaClient.producer()
 
 module.exports.startBinanceStreams = async () => {
-    await redisClient.connect()
-    await producer.connect()
+    let redisConnected = false;
+    while (!redisConnected) {
+        try {
+            await redisClient.connect();
+            redisConnected = true;
+            console.log('Binance Publisher: Redis Connected');
+        } catch (err) {
+            console.error('Binance Publisher: Redis connection failed, retrying in 5s...', err.message);
+            await new Promise(res => setTimeout(res, 5000));
+        }
+    }
+
+    let kafkaConnected = false;
+    while (!kafkaConnected) {
+        try {
+            await producer.connect();
+            kafkaConnected = true;
+            console.log('Binance Publisher: Kafka Connected');
+        } catch (err) {
+            console.error('Binance Publisher: Kafka connection failed, retrying in 5s...', err.message);
+            await new Promise(res => setTimeout(res, 5000));
+        }
+    }
     assets.forEach(asset => {
         const streamUrl = `wss://stream.binance.com:9443/ws/${asset}@trade`
         const ws = new WebSocket(streamUrl)
