@@ -95,86 +95,77 @@ export default function PositionsOrdersPanel() {
   const liquidatedPositions = positions.filter((pos) => pos.status === "liquidated")
   return (
     <div
-      className="bg-[#0f1318] border border-gray-800 rounded-md overflow-hidden h-full flex flex-col"
-      style={{ height: "300px" }} // <-- Add this line for fixed height
+      className="bg-[#1e2329] border border-[#2a3038] rounded-md overflow-hidden h-full flex flex-col"
+      style={{ height: "300px" }}
     >
-      <div className="px-4 py-2 text-gray-300 font-semibold border-b border-gray-800">
+      <div className="px-4 py-2 text-[#EAECEF] font-semibold border-b border-[#2a3038]">
         Positions
       </div>
-      <div className="grid grid-cols-3 gap-1 bg-[#0b0f14] p-1 border-b border-gray-800">
+      <div className="grid grid-cols-3 gap-1 bg-[#151a21] p-1 border-b border-[#2a3038]">
         {TABS.map((item) => (
           <button
             key={item.key}
             onClick={() => setTab(item.key)}
-            className={`px-3 py-2 rounded text-sm ${
+            className={`px-3 py-2 rounded text-sm transition-colors ${
               tab === item.key
-                ? "bg-gray-800 text-white"
-                : "text-gray-400 hover:text-gray-200"
+                ? "bg-[#2a3038] text-[#EAECEF]"
+                : "text-[#848E9C] hover:text-[#EAECEF]"
             }`}
           >
             {item.label}
           </button>
         ))}
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center text-sm text-gray-500 overflow-auto">
+      <div className="flex-1 flex flex-col items-center justify-center text-sm text-[#848E9C] overflow-auto">
         {tab === "positions" && (
           loadingPositions ? "Loading..." :
           openPositions.length === 0 ? "No open positions" :
-          <table className="w-full text-xs text-left text-gray-400">
-            <thead>
+          <table className="w-full text-xs text-left text-[#848E9C]">
+            <thead className="bg-[#151a21] sticky top-0">
               <tr>
-                <th className="px-2 py-1">Asset</th>
-                <th className="px-2 py-1">Qty</th>
-                <th className="px-2 py-1">Entry</th>
-                <th className="px-2 py-1">Leverage</th>
-                <th className="px-2 py-1">Margin</th>
-                <th className="px-2 py-1">Current Price</th>
-                <th className="px-2 py-1">Type</th> {/* Add this */}
-                <th className="px-2 py-1">PnL</th>
-                <th className="px-2 py-1">Status</th>
-                <th className="px-2 py-1">Action</th>
+                <th className="px-2 py-2 font-medium">Asset</th>
+                <th className="px-2 py-2 font-medium">Qty</th>
+                <th className="px-2 py-2 font-medium">Entry</th>
+                <th className="px-2 py-2 font-medium">Lev</th>
+                <th className="px-2 py-2 font-medium">Margin</th>
+                <th className="px-2 py-2 font-medium">Price</th>
+                <th className="px-2 py-2 font-medium">Type</th>
+                <th className="px-2 py-2 font-medium">PnL</th>
+                <th className="px-2 py-2 font-medium">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#2a3038]">
               {openPositions.map((pos) => (
-                <tr key={pos.positionId}>
-                  <td className="px-2 py-1">{pos.asset}</td>
-                  <td className="px-2 py-1">{pos.quantity}</td>
-                  <td className="px-2 py-1">{pos.boughtPrice}</td>
-                  <td className="px-2 py-1">{pos.leverage}</td>
-                  <td className="px-2 py-1">{pos.margin}</td>
+                <tr key={pos.positionId} className="hover:bg-[#2a3038]/30">
+                  <td className="px-2 py-2 text-[#EAECEF] font-medium">{pos.asset}</td>
+                  <td className="px-2 py-2">{pos.quantity}</td>
+                  <td className="px-2 py-2">{Number(pos.boughtPrice).toFixed(2)}</td>
+                  <td className="px-2 py-2">{pos.leverage}x</td>
+                  <td className="px-2 py-2">{Number(pos.margin).toFixed(2)}</td>
                   <td
-                    className={`px-2 py-1 ${
+                    className={`px-2 py-2 ${
                       Number(getCurrentPrice(pos)) > Number(pos.boughtPrice)
-                        ? "text-green-400"
+                        ? "text-[#0ECB81]"
                         : Number(getCurrentPrice(pos)) < Number(pos.boughtPrice)
-                        ? "text-red-400"
+                        ? "text-[#F6465D]"
                         : ""
                     }`}
                   >
                     {getCurrentPrice(pos)}
                   </td>
-                  <td className="px-2 py-1">{pos.type}</td> {/* Add this */}
-                  <td className={`px-2 py-1 ${getPnL(pos) > 0 ? "text-green-400" : getPnL(pos) < 0 ? "text-red-400" : ""}`}>
+                  <td className={`px-2 py-2 ${pos.type === 'long' ? "text-[#0ECB81]" : "text-[#F6465D]"}`}>
+                    {pos.type.toUpperCase()}
+                  </td>
+                  <td className={`px-2 py-2 font-medium ${getPnL(pos) > 0 ? "text-[#0ECB81]" : getPnL(pos) < 0 ? "text-[#F6465D]" : ""}`}>
                     {getPnL(pos)}
                   </td>
-                  <td className="px-2 py-1">{pos.status}</td>
-                  <td className="px-2 py-1">
-                    {pos.type === "short" ? (
-                      <button
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
-                        onClick={() => handleCloseShortPosition(pos.positionId)}
-                      >
-                        Close 
-                      </button>
-                    ) : (
-                      <button
-                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
-                        onClick={() => handleClosePosition(pos.positionId)}
-                      >
-                        Close 
-                      </button>
-                    )}
+                  <td className="px-2 py-2">
+                    <button
+                      className="bg-[#2a3038] hover:bg-[#353b43] text-[#EAECEF] border border-[#474d57] px-2 py-1 rounded text-xs transition-colors"
+                      onClick={() => pos.type === "short" ? handleCloseShortPosition(pos.positionId) : handleClosePosition(pos.positionId)}
+                    >
+                      Close
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -184,28 +175,26 @@ export default function PositionsOrdersPanel() {
         {tab === "closed" && (
           loadingPositions ? "Loading..." :
           closedPositions.length === 0 ? "No closed positions" :
-          <table className="w-full text-xs text-left text-gray-400">
-            <thead>
+          <table className="w-full text-xs text-left text-[#848E9C]">
+            <thead className="bg-[#151a21] sticky top-0">
               <tr>
-                <th className="px-2 py-1">Asset</th>
-                <th className="px-2 py-1">Qty</th>
-                <th className="px-2 py-1">Entry</th>
-                <th className="px-2 py-1">Leverage</th>
-                <th className="px-2 py-1">Margin</th>
-                <th className="px-2 py-1">Current Price</th>
-                <th className="px-2 py-1">Status</th>
+                <th className="px-2 py-2 font-medium">Asset</th>
+                <th className="px-2 py-2 font-medium">Qty</th>
+                <th className="px-2 py-2 font-medium">Entry</th>
+                <th className="px-2 py-2 font-medium">Lev</th>
+                <th className="px-2 py-2 font-medium">Price</th>
+                <th className="px-2 py-2 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#2a3038]">
               {closedPositions.map((pos) => (
-                <tr key={pos.positionId}>
-                  <td className="px-2 py-1">{pos.asset}</td>
-                  <td className="px-2 py-1">{pos.quantity}</td>
-                  <td className="px-2 py-1">{pos.boughtPrice}</td>
-                  <td className="px-2 py-1">{pos.leverage}</td>
-                  <td className="px-2 py-1">{pos.margin}</td>
-                  <td className="px-2 py-1">{getCurrentPrice(pos)}</td>
-                  <td className="px-2 py-1">{pos.status}</td>
+                <tr key={pos.positionId} className="hover:bg-[#2a3038]/30">
+                  <td className="px-2 py-2 text-[#EAECEF]">{pos.asset}</td>
+                  <td className="px-2 py-2">{pos.quantity}</td>
+                  <td className="px-2 py-2">{Number(pos.boughtPrice).toFixed(2)}</td>
+                  <td className="px-2 py-2">{pos.leverage}x</td>
+                  <td className="px-2 py-2">{getCurrentPrice(pos)}</td>
+                  <td className="px-2 py-2 text-[#EAECEF]">{pos.status}</td>
                 </tr>
               ))}
             </tbody>
@@ -214,28 +203,26 @@ export default function PositionsOrdersPanel() {
         {tab === "liquidated" && (
           loadingPositions ? "Loading..." :
           liquidatedPositions.length === 0 ? "No liquidated positions" :
-          <table className="w-full text-xs text-left text-gray-400">
-            <thead>
+          <table className="w-full text-xs text-left text-[#848E9C]">
+            <thead className="bg-[#151a21] sticky top-0">
               <tr>
-                <th className="px-2 py-1">Asset</th>
-                <th className="px-2 py-1">Qty</th>
-                <th className="px-2 py-1">Entry</th>
-                <th className="px-2 py-1">Leverage</th>
-                <th className="px-2 py-1">Margin</th>
-                <th className="px-2 py-1">Current Price</th>
-                <th className="px-2 py-1">Status</th>
+                <th className="px-2 py-2 font-medium">Asset</th>
+                <th className="px-2 py-2 font-medium">Qty</th>
+                <th className="px-2 py-2 font-medium">Entry</th>
+                <th className="px-2 py-2 font-medium">Lev</th>
+                <th className="px-2 py-2 font-medium">Price</th>
+                <th className="px-2 py-2 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#2a3038]">
               {liquidatedPositions.map((pos) => (
-                <tr key={pos.positionId}>
-                  <td className="px-2 py-1">{pos.asset}</td>
-                  <td className="px-2 py-1">{pos.quantity}</td>
-                  <td className="px-2 py-1">{pos.boughtPrice}</td>
-                  <td className="px-2 py-1">{pos.leverage}</td>
-                  <td className="px-2 py-1">{pos.margin}</td>
-                  <td className="px-2 py-1">{getCurrentPrice(pos)}</td>
-                  <td className="px-2 py-1">{pos.status}</td>
+                <tr key={pos.positionId} className="hover:bg-[#2a3038]/30">
+                  <td className="px-2 py-2 text-[#EAECEF]">{pos.asset}</td>
+                  <td className="px-2 py-2">{pos.quantity}</td>
+                  <td className="px-2 py-2">{Number(pos.boughtPrice).toFixed(2)}</td>
+                  <td className="px-2 py-2">{pos.leverage}x</td>
+                  <td className="px-2 py-2">{getCurrentPrice(pos)}</td>
+                  <td className="px-2 py-2 text-[#F6465D]">{pos.status}</td>
                 </tr>
               ))}
             </tbody>

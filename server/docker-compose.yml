@@ -20,10 +20,12 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
     restart: always
     healthcheck:
       test: ["CMD", "bash", "-c", "export KAFKA_BROKER=$(hostname -i); nc -z localhost 9092 || exit 1"]
@@ -32,7 +34,25 @@ services:
       retries: 8
     volumes:
       - ./scripts:/scripts:ro
-    command: ["bash", "-c", "sleep 10 && /scripts/create-kafka-topics.sh"]
+
+  init-kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:29092 --list
+
+      echo -e 'Creating kafka topics'
+      /scripts/create-kafka-topics.sh
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:29092 --list
+      "
+    volumes:
+      - ./scripts:/scripts:ro
 
   timescaledb:
     image: timescale/timescaledb:latest-pg14
@@ -44,14 +64,14 @@ services:
       - "5432:5432"
     volumes:
       - ts-data:/var/lib/postgresql/data
-      - ./scripts:/scripts:ro
+      - ./scripts/init-timescale-hypertables.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+      - ./scripts/attach-timescale-policies.sql:/docker-entrypoint-initdb.d/002_policies.sql:ro
     restart: always
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "sparsh"]
       interval: 5s
       timeout: 5s
       retries: 20
-    command: ["bash", "-c", "sleep 10 && psql -U sparsh -d timescale -f /scripts/init-timescale-hypertables.sql && psql -U sparsh -d timescale -f /scripts/attach-timescale-policies.sql"]
 
   redis:
     image: redis:7

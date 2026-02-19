@@ -16,7 +16,7 @@ export default function Page() {
   return (
     <UserProvider>
       <MarketProvider>
-        <div className="h-screen w-full bg-[#0b0f14] text-gray-200 flex flex-col">
+        <div className="h-screen w-full bg-[#0b0e11] text-[#EAECEF] flex flex-col">
           <TopBar />
           <Split
             className="flex-1 flex overflow-hidden"
@@ -27,7 +27,7 @@ export default function Page() {
             expandToMin={true}
           >
             {/* Left column */}
-            <aside className="h-full flex flex-col border-r border-gray-800 overflow-y-auto bg-[#10151c]">
+            <aside className="h-full flex flex-col border-r border-[#2a3038] overflow-y-auto bg-[#0b0e11]">
               <AssetsPanel />
               <div className="p-3">
                 <RecentTrades />
@@ -35,7 +35,7 @@ export default function Page() {
             </aside>
 
             {/* Center column */}
-            <main className="flex-1 flex flex-col overflow-hidden min-w-0 overflow-y-auto">
+            <main className="flex-1 flex flex-col overflow-hidden min-w-0 overflow-y-auto bg-[#0b0e11]">
               <MarketHeader />
               <div className="flex-1 min-w-0">
                 <TVChart />
@@ -46,7 +46,7 @@ export default function Page() {
             </main>
 
             {/* Right column */}
-            <aside className="h-full flex flex-col border-l border-gray-800 overflow-y-auto p-3 space-y-3 bg-[#10151c] min-w-0">
+            <aside className="h-full flex flex-col border-l border-[#2a3038] overflow-y-auto p-3 space-y-3 bg-[#0b0e11] min-w-0">
         
               <OrderPanel />
             </aside>

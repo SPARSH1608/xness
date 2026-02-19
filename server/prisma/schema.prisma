@@ -8,14 +8,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// This table has subclasses and requires additional setup for migrations. Visit https://pris.ly/d/table-inheritance for more info.
 model trades {
-  asset      String
+  id         Int      @default(autoincrement())
+  asset      String   @db.VarChar(50)
   price      Decimal  @db.Decimal
   quantity   Decimal  @db.Decimal
   trade_time DateTime @db.Timestamptz(6)
 
+  @@id([id, trade_time])
   @@index([trade_time(sort: Desc)])
-  @@ignore
+  @@index([trade_time(sort: Desc)], map: "trades_trade_time_idx1")
 }
 
 model User {

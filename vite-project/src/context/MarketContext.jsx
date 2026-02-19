@@ -49,7 +49,7 @@ export function MarketProvider({ children }) {
             const data = await r.json()
             if (!cancelled) {
               const formattedCandles = data.map((c) => ({
-                time: Math.floor((c.time || c.t || c.openTime || Date.now()) / 1000),
+                time: c.time ?? Math.floor((c.t || c.openTime || Date.now()) / 1000),
                 open: +(c.open || c.o),
                 high: +(c.high || c.h),
                 low: +(c.low || c.l),

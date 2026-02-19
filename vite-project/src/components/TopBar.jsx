@@ -54,28 +54,28 @@ export default function TopBar() {
   };
 
   return (
-    <div className="w-full border-b border-gray-800 bg-black">
+    <div className="w-full border-b border-[#2a3038] bg-[#0b0e11]">
       <div className="mx-auto max-w-screen-2xl px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-white font-semibold">TradeStream</span>
-          <span className="text-gray-500">|</span>
+          <span className="text-[#EAECEF] font-bold tracking-tight">TradeStream</span>
+          <span className="text-[#2a3038]">|</span>
           <div className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-green-500" aria-hidden />
-            <span className="text-xs text-gray-400">Connected</span>
+            <span className="inline-block w-2 h-2 rounded-full bg-[#0ECB81]" aria-hidden />
+            <span className="text-xs text-[#848E9C]">Connected</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <span className="text-xs text-gray-300">
-                Hello, <b>{user.username}</b>
-                {" | "}Fixed Balance: <b>${fixedBalance.toFixed(2)}</b>
-                {" | "}Live Balance: <b className={liveBalance >= fixedBalance ? "text-green-400" : "text-red-400"}>
+              <span className="text-xs text-[#848E9C]">
+                Hello, <b className="text-[#EAECEF]">{user.username}</b>
+                {" | "}Fixed Balance: <b className="text-[#EAECEF]">${fixedBalance.toFixed(2)}</b>
+                {" | "}Live Balance: <b className={liveBalance >= fixedBalance ? "text-[#0ECB81]" : "text-[#F6465D]"}>
                   ${liveBalance.toFixed(2)}
                 </b>
               </span>
               <button
-                className="text-xs text-red-400 border border-red-400 rounded px-2 py-1 ml-2"
+                className="text-xs text-[#F6465D] border border-[#F6465D] rounded px-2 py-1 ml-2 hover:bg-[#F6465D]/10 transition-colors"
                 onClick={logout}
                 disabled={loading}
               >
@@ -85,13 +85,13 @@ export default function TopBar() {
           ) : (
             <>
               <button
-                className="text-xs text-gray-300 border border-gray-700 rounded px-2 py-1"
+                className="text-xs text-[#EAECEF] hover:text-[#0ECB81] transition-colors"
                 onClick={() => { setShowLogin(true); setShowSignup(false); }}
               >
                 Login
               </button>
               <button
-                className="text-xs text-gray-300 border border-gray-700 rounded px-2 py-1"
+                className="text-xs bg-[#EAECEF] text-[#0b0e11] px-3 py-1 rounded font-medium hover:bg-white transition-colors"
                 onClick={() => { setShowSignup(true); setShowLogin(false); }}
               >
                 Signup
@@ -102,14 +102,14 @@ export default function TopBar() {
       </div>
       {/* Login Modal */}
       {showLogin && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
           <form
-            className="bg-[#181c23] p-6 rounded shadow-md flex flex-col gap-3 min-w-[300px]"
+            className="bg-[#1e2329] p-6 rounded-lg shadow-xl border border-[#2a3038] flex flex-col gap-4 min-w-[320px]"
             onSubmit={handleLogin}
           >
-            <h2 className="text-lg text-white mb-2">Login</h2>
+            <h2 className="text-lg text-[#EAECEF] font-semibold">Login</h2>
             <input
-              className="p-2 rounded bg-gray-900 text-white"
+              className="p-2.5 rounded bg-[#2a3038] text-[#EAECEF] border border-transparent focus:border-[#474d57] outline-none transition-colors"
               type="email"
               placeholder="Email"
               value={form.email}
@@ -117,24 +117,24 @@ export default function TopBar() {
               required
             />
             <input
-              className="p-2 rounded bg-gray-900 text-white"
+              className="p-2.5 rounded bg-[#2a3038] text-[#EAECEF] border border-transparent focus:border-[#474d57] outline-none transition-colors"
               type="password"
               placeholder="Password"
               value={form.password}
               onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
               required
             />
-            {error && <div className="text-red-400 text-xs">{error}</div>}
+            {error && <div className="text-[#F6465D] text-xs">{error}</div>}
             <div className="flex gap-2 mt-2">
               <button
-                className="bg-green-600 text-white px-4 py-1 rounded"
+                className="flex-1 bg-[#0ECB81] hover:brightness-110 text-white py-2 rounded font-medium transition-all"
                 type="submit"
                 disabled={loading}
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
               <button
-                className="text-gray-400 px-4 py-1 rounded border border-gray-700"
+                className="px-4 text-[#848E9C] hover:text-[#EAECEF] transition-colors"
                 type="button"
                 onClick={() => setShowLogin(false)}
               >
@@ -146,14 +146,14 @@ export default function TopBar() {
       )}
       {/* Signup Modal */}
       {showSignup && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
           <form
-            className="bg-[#181c23] p-6 rounded shadow-md flex flex-col gap-3 min-w-[300px]"
+            className="bg-[#1e2329] p-6 rounded-lg shadow-xl border border-[#2a3038] flex flex-col gap-4 min-w-[320px]"
             onSubmit={handleSignup}
           >
-            <h2 className="text-lg text-white mb-2">Signup</h2>
+            <h2 className="text-lg text-[#EAECEF] font-semibold">Signup</h2>
             <input
-              className="p-2 rounded bg-gray-900 text-white"
+              className="p-2.5 rounded bg-[#2a3038] text-[#EAECEF] border border-transparent focus:border-[#474d57] outline-none transition-colors"
               type="text"
               placeholder="Username"
               value={form.username}
@@ -161,7 +161,7 @@ export default function TopBar() {
               required
             />
             <input
-              className="p-2 rounded bg-gray-900 text-white"
+              className="p-2.5 rounded bg-[#2a3038] text-[#EAECEF] border border-transparent focus:border-[#474d57] outline-none transition-colors"
               type="email"
               placeholder="Email"
               value={form.email}
@@ -169,7 +169,7 @@ export default function TopBar() {
               required
             />
             <input
-              className="p-2 rounded bg-gray-900 text-white"
+              className="p-2.5 rounded bg-[#2a3038] text-[#EAECEF] border border-transparent focus:border-[#474d57] outline-none transition-colors"
               type="password"
               placeholder="Password"
               value={form.password}
@@ -177,24 +177,24 @@ export default function TopBar() {
               required
             />
             <input
-              className="p-2 rounded bg-gray-900 text-white"
+              className="p-2.5 rounded bg-[#2a3038] text-[#EAECEF] border border-transparent focus:border-[#474d57] outline-none transition-colors"
               type="tel"
               placeholder="Phone"
               value={form.phone}
               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               required
             />
-            {error && <div className="text-red-400 text-xs">{error}</div>}
+            {error && <div className="text-[#F6465D] text-xs">{error}</div>}
             <div className="flex gap-2 mt-2">
               <button
-                className="bg-blue-600 text-white px-4 py-1 rounded"
+                className="flex-1 bg-[#0ECB81] hover:brightness-110 text-white py-2 rounded font-medium transition-all"
                 type="submit"
                 disabled={loading}
               >
                 {loading ? "Signing up..." : "Signup"}
               </button>
               <button
-                className="text-gray-400 px-4 py-1 rounded border border-gray-700"
+                className="px-4 text-[#848E9C] hover:text-[#EAECEF] transition-colors"
                 type="button"
                 onClick={() => setShowSignup(false)}
               >

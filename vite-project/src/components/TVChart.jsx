@@ -5,27 +5,22 @@ import { useEffect, useRef, useState } from "react";
 import { useMarket, INTERVALS } from "../context/MarketContext";
 
 export default function TVChart() {
-  const priceChartRef = useRef(null);
-  const volumeChartRef = useRef(null);
-  const priceChartInstance = useRef(null);
-  const volumeChartInstance = useRef(null);
+  const chartContainerRef = useRef(null);
+  const chartInstance = useRef(null);
   const candleSeriesRef = useRef(null);
   const volumeSeriesRef = useRef(null);
+  
   const { symbol, candles, loadingCandles, interval, setInterval, liveCandle } = useMarket();
-  const [chartsReady, setChartsReady] = useState(false);
+  const [chartReady, setChartReady] = useState(false);
 
-  // Initialize charts
+  // Initialize chart
   useEffect(() => {
-    if (!priceChartRef.current || !volumeChartRef.current) return;
+    if (!chartContainerRef.current) return;
 
-    // Clean up previous charts if they exist
-    if (priceChartInstance.current) {
-      priceChartInstance.current.remove();
-      priceChartInstance.current = null;
-    }
-    if (volumeChartInstance.current) {
-      volumeChartInstance.current.remove();
-      volumeChartInstance.current = null;
+    // Clean up previous chart
+    if (chartInstance.current) {
+      chartInstance.current.remove();
+      chartInstance.current = null;
     }
 
     const dateFormat =
@@ -33,150 +28,110 @@ export default function TVChart() {
         ? "yyyy-MM-dd"
         : "yyyy-MM-dd HH:mm";
 
-    // Create price chart
-    const priceChart = createChart(priceChartRef.current, {
+    // Create single chart instance
+    const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: "solid", color: "#0a0a0a" },
-        textColor: "#e5e5e5",
+        background: { type: "solid", color: "#0b0e11" },
+        textColor: "#848E9C",
         fontFamily: "Inter, sans-serif",
       },
       grid: {
-        vertLines: { color: "#222" },
-        horzLines: { color: "#222" },
+        vertLines: { color: "#1e2329" },
+        horzLines: { color: "#1e2329" },
       },
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        borderColor: "#333",
-        tickMarkColor: "#444",
-        rightOffset: 2,
+        borderColor: "#2a3038",
+        tickMarkColor: "#2a3038",
+        rightOffset: 5,
       },
       rightPriceScale: {
-        borderColor: "#333",
-        textColor: "#e5e5e5",
-        scaleMargins: { top: 0.1, bottom: 0.2 },
+        borderColor: "#2a3038",
+        textColor: "#848E9C",
+        scaleMargins: { top: 0.1, bottom: 0.2 }, // Reserve space for volume
       },
-      width: priceChartRef.current.clientWidth,
-      height: 300,
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
       crosshair: {
-        mode: 0,
+        mode: 1, // Magnet mode
         vertLine: {
-          color: "#39FF14",
+          color: "#474d57",
           width: 1,
-          style: 2,
-          labelBackgroundColor: "#000",
+          style: 3, // Dashed
+          labelBackgroundColor: "#1e2329",
         },
         horzLine: {
-          color: "#39FF14",
+          color: "#474d57",
           width: 1,
-          style: 2,
-          labelBackgroundColor: "#000",
+          style: 3, // Dashed
+          labelBackgroundColor: "#1e2329",
         },
       },
-      localization: { dateFormat },
+      localization: { 
+        dateFormat,
+        timeFormatter: (timestamp) => {
+          const date = new Date(timestamp * 1000);
+          // Format: "YYYY-MM-DD HH:mm UTC" for crosshair
+          return date.toISOString().replace("T", " ").substring(0, 16) + " UTC"; 
+        },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
+        borderColor: "#2a3038",
+        tickMarkColor: "#2a3038",
+        rightOffset: 5,
+        tickMarkFormatter: (time, tickMarkType, locale) => {
+           const date = new Date(time * 1000);
+           // Simple UTC formatting for axis
+           // You might want to conditionalize based on tickMarkType (Year, Month, Day, Time)
+           // But for now, let's try a generic smart formatter or simple ISO
+           // tickMarkType: 0=Year, 1=Month, 2=DayOfMonth, 3=Time, 4=TimeWithSeconds
+           if (tickMarkType < 3) {
+             return date.toISOString().substring(0, 10); // YYYY-MM-DD
+           }
+           return date.toISOString().substring(11, 16); // HH:mm
+        },
+      },
     });
 
-    // Create candle series
-    const candleSeries = priceChart.addSeries(CandlestickSeries, {
-      upColor: "#22c55e",
-      downColor: "#ef4444",
+
+    // Create candle series (Main Price)
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: "#0ECB81",
+      downColor: "#F6465D",
       borderVisible: false,
-      wickUpColor: "#22c55e",
-      wickDownColor: "#ef4444",
+      wickUpColor: "#0ECB81",
+      wickDownColor: "#F6465D",
       title: "Price",
     });
 
-    // Create volume chart
-    const volumeChart = createChart(volumeChartRef.current, {
-      layout: {
-        background: { type: "solid", color: "#0a0a0a" },
-        textColor: "#e5e5e5",
-        fontFamily: "Inter, sans-serif",
-      },
-      grid: {
-        vertLines: { color: "#222" },
-        horzLines: { color: "#222" },
-      },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: "#333",
-        tickMarkColor: "#444",
-      },
-      rightPriceScale: {
-        borderColor: "#333",
-        textColor: "#e5e5e5",
-        visible: false,
-      },
-      width: volumeChartRef.current.clientWidth,
-      height: 120,
-      crosshair: {
-        mode: 0,
-        vertLine: {
-          color: "#39FF14",
-          width: 1,
-          style: 2,
-          labelBackgroundColor: "#000",
-        },
-        horzLine: {
-          visible: false,
-        },
-      },
-      localization: { dateFormat },
-    });
-
-    // Create volume series
-    const volumeSeries = volumeChart.addSeries(HistogramSeries, {
+    // Create volume series (Overlay)
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       color: "#26a69a",
       priceFormat: {
         type: "volume",
       },
+      priceScaleId: "", // Overlay on main chart
+      scaleMargins: {
+        top: 0.8, // Place at bottom 20%
+        bottom: 0,
+      },
       title: "Volume",
     });
 
-    priceChartInstance.current = priceChart;
-    volumeChartInstance.current = volumeChart;
+    chartInstance.current = chart;
     candleSeriesRef.current = candleSeries;
     volumeSeriesRef.current = volumeSeries;
-
-    // Wait for charts to be fully initialized before synchronizing
-    setTimeout(() => {
-      if (priceChartInstance.current && volumeChartInstance.current) {
-        // Synchronize time scales between charts
-        priceChartInstance.current.timeScale().subscribeVisibleTimeRangeChange((timeRange) => {
-          if (timeRange && volumeChartInstance.current) {
-            try {
-              volumeChartInstance.current.timeScale().setVisibleRange(timeRange);
-            } catch (error) {
-              console.error("Error syncing volume chart:", error);
-            }
-          }
-        });
-
-        volumeChartInstance.current.timeScale().subscribeVisibleTimeRangeChange((timeRange) => {
-          if (timeRange && priceChartInstance.current) {
-            try {
-              priceChartInstance.current.timeScale().setVisibleRange(timeRange);
-            } catch (error) {
-              console.error("Error syncing price chart:", error);
-            }
-          }
-        });
-
-        setChartsReady(true);
-      }
-    }, 100);
+    setChartReady(true);
 
     // Responsive resize
     const handleResize = () => {
-      if (priceChartRef.current && priceChartInstance.current) {
-        priceChartInstance.current.applyOptions({
-          width: priceChartRef.current.clientWidth,
-        });
-      }
-      if (volumeChartRef.current && volumeChartInstance.current) {
-        volumeChartInstance.current.applyOptions({
-          width: volumeChartRef.current.clientWidth,
+      if (chartContainerRef.current && chartInstance.current) {
+        chartInstance.current.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientHeight,
         });
       }
     };
@@ -184,29 +139,25 @@ export default function TVChart() {
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (priceChartInstance.current) {
-        priceChartInstance.current.remove();
-        priceChartInstance.current = null;
-      }
-      if (volumeChartInstance.current) {
-        volumeChartInstance.current.remove();
-        volumeChartInstance.current = null;
+      if (chartInstance.current) {
+        chartInstance.current.remove();
+        chartInstance.current = null;
       }
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;
-      setChartsReady(false);
+      setChartReady(false);
     };
   }, [symbol, interval]);
 
   // Update chart data
   useEffect(() => {
-    if (!candleSeriesRef.current || !volumeSeriesRef.current || !candles.length || !chartsReady) return;
+    if (!candleSeriesRef.current || !volumeSeriesRef.current || !candles.length || !chartReady) return;
 
     try {
-      // Prepare candle data - time is already in Unix timestamp format
+      // Prepare candle data
       const candleData = candles
         .map((candle) => ({
-          time: candle.time, // Already in Unix timestamp (seconds)
+          time: candle.time,
           open: Number(candle.open),
           high: Number(candle.high),
           low: Number(candle.low),
@@ -217,50 +168,38 @@ export default function TVChart() {
 
       candleSeriesRef.current.setData(candleData);
 
-      // Prepare volume data - use the volume field from candle data
+      // Prepare volume data
       const volumeData = candles
         .map((candle) => ({
-          time: candle.time, // Already in Unix timestamp (seconds)
-          value: Number(candle.volume), // Use the volume field
+          time: candle.time,
+          value: Number(candle.volume),
           color: Number(candle.close) >= Number(candle.open)
-            ? "rgba(34, 197, 94, 0.5)"
-            : "rgba(239, 68, 68, 0.5)",
+            ? "rgba(14, 203, 129, 0.5)"
+            : "rgba(246, 70, 93, 0.5)",
         }))
         .sort((a, b) => a.time - b.time)
         .filter((c, i, arr) => i === 0 || c.time !== arr[i - 1].time);
 
       volumeSeriesRef.current.setData(volumeData);
 
-      // Fit content to view all data
-      setTimeout(() => {
-        if (priceChartInstance.current) {
-          try {
-            priceChartInstance.current.timeScale().fitContent();
-          } catch (error) {
-            console.error("Error fitting price chart content:", error);
-          }
-        }
-        if (volumeChartInstance.current) {
-          try {
-            volumeChartInstance.current.timeScale().fitContent();
-          } catch (error) {
-            console.error("Error fitting volume chart content:", error);
-          }
-        }
-      }, 100);
+      // Fit content
+      // setTimeout(() => {
+      //   if (chartInstance.current) {
+      //      chartInstance.current.timeScale().fitContent();
+      //   }
+      // }, 50);
     } catch (error) {
       console.error("Error updating chart data:", error);
     }
-  }, [candles, chartsReady]);
+  }, [candles, chartReady]);
 
   // Handle live candle updates
   useEffect(() => {
-    if (!liveCandle || !candleSeriesRef.current || !volumeSeriesRef.current || !chartsReady) return;
+    if (!liveCandle || !candleSeriesRef.current || !volumeSeriesRef.current || !chartReady) return;
 
     try {
-      const time = liveCandle.time; // Already in Unix timestamp format
+      const time = liveCandle.time;
       
-      // Update candle series
       candleSeriesRef.current.update({
         time,
         open: Number(liveCandle.open),
@@ -269,64 +208,52 @@ export default function TVChart() {
         close: Number(liveCandle.close),
       });
 
-      // Update volume series - use the volume field from liveCandle
       volumeSeriesRef.current.update({
         time,
-        value: Number(liveCandle.volume), // Use the volume field
+        value: Number(liveCandle.volume),
         color: Number(liveCandle.close) >= Number(liveCandle.open)
-          ? "rgba(34, 197, 94, 0.5)"
-          : "rgba(239, 68, 68, 0.5)",
+          ? "rgba(14, 203, 129, 0.5)"
+          : "rgba(246, 70, 93, 0.5)",
       });
     } catch (error) {
       console.error("Error updating live candle:", error);
     }
-  }, [liveCandle, chartsReady]);
+  }, [liveCandle, chartReady]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 py-2 border-b border-gray-800 bg-[#0f1318]">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-300">
-            {symbol} / {interval}
-          </h2>
-          <div className="flex items-center gap-2">
-            <select
-              className="bg-[#181c23] text-gray-300 text-xs rounded px-2 py-1 border border-gray-700"
-              value={interval}
-              onChange={e => setInterval(e.target.value)}
-            >
-              {INTERVALS.map(i => (
-                <option key={i} value={i}>{i}</option>
-              ))}
-            </select>
-            {loadingCandles && <div className="text-xs text-gray-500 ml-2">Loading data...</div>}
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex-1 flex flex-col">
-        {/* Price Chart Section with Label */}
-        <div className="px-3 py-1 bg-[#11151c] border-b border-gray-800 text-xs text-gray-400">
-          PRICE CHART
-        </div>
-        <div className="flex-1 relative min-h-[300px]">
-          <div ref={priceChartRef} className="absolute inset-0" />
+    <div className="flex flex-col h-full bg-[#0b0e11]">
+      <div className="px-4 py-2 border-b border-[#2a3038] bg-[#0b0e11] flex items-center justify-between">
+        <div className="flex items-center gap-4">
+           {/* Maybe put symbol info here if needed again, or keep minimal */}
+           <div className="flex bg-[#1e2329] rounded p-0.5">
+             {INTERVALS.map((i) => (
+                <button
+                  key={i}
+                  onClick={() => setInterval(i)}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    interval === i 
+                    ? "bg-[#2a3038] text-[#EAECEF] font-medium" 
+                    : "text-[#848E9C] hover:text-[#EAECEF]"
+                  }`}
+                >
+                  {i}
+                </button>
+             ))}
+           </div>
         </div>
         
-        {/* Volume Chart Section with Label */}
-        <div className="px-3 py-1 bg-[#11151c] border-b border-gray-800 text-xs text-gray-400">
-          VOLUME
-        </div>
-        <div className="h-[120px] relative">
-          <div ref={volumeChartRef} className="absolute inset-0" />
-        </div>
+        {loadingCandles && <div className="text-xs text-[#848E9C] animate-pulse">Loading data...</div>}
       </div>
       
-      {!loadingCandles && candles.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10 pointer-events-none">
-          <span className="text-gray-500">No data available</span>
-        </div>
-      )}
+      <div className="flex-1 relative min-h-0">
+        <div ref={chartContainerRef} className="absolute inset-0" />
+        
+        {!loadingCandles && candles.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[#848E9C] bg-[#1e2329]/80 px-4 py-2 rounded">No data available for {symbol}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

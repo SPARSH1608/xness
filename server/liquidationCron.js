@@ -1,3 +1,4 @@
+require('dotenv').config()
 const prisma = require('./prismaClient');
 const redis = require('./redisClient');
 const { Kafka } = require('kafkajs');
@@ -8,10 +9,10 @@ const http = require('http')
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    }
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
 })
 
 const kafkaClient = new Kafka({
@@ -21,7 +22,7 @@ const kafkaClient = new Kafka({
 const kafkaProducer = kafkaClient.producer();
 kafkaProducer.connect().catch(console.error);
 
-const kafkaConsumer = kafkaClient.consumer({ groupId: 'liquidation-group' }); 
+const kafkaConsumer = kafkaClient.consumer({ groupId: 'liquidation-group' });
 
 let openPositionIds = new Set();
 
@@ -55,7 +56,7 @@ async function checkAndLiquidatePositions() {
       openPositionIds.delete(id);
       continue;
     }
-    console.log(`Checking position ${id} for liquidation...`,pos);
+    console.log(`Checking position ${id} for liquidation...`, pos);
     const priceStr = await redis.get(`price:${pos.asset}`);
     if (!priceStr) continue;
     const currentPrice = parseFloat(priceStr);
@@ -66,7 +67,7 @@ async function checkAndLiquidatePositions() {
     } else {
       pnl = (Number(pos.boughtPrice) - currentPrice) * Number(pos.quantity);
     }
-console.log('pnl',pnl)
+    console.log('pnl', pnl)
     let shouldLiquidate = false;
 
     if (

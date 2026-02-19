@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+:root {
+  --bg-main: #0b0e11;
+  --bg-secondary: #151a21;
+  --bg-tertiary: #1e2329;
+  --border-color: #2a3038;
+  
+  --color-up: #0ECB81;
+  --color-down: #F6465D;
+  --text-primary: #EAECEF;
+  --text-secondary: #848E9C;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
 .gutter,
 .gutter-horizontal,
 .gutter-vertical {

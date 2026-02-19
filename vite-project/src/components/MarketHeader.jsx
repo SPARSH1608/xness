@@ -39,28 +39,25 @@ export default function MarketHeader() {
   const latestQty = latestTrade ? Number(latestTrade.quantity || latestTrade.qty || 0) : 0
 
   return (
-    <div className="px-4 py-2 border-b border-gray-800 bg-[#0f1318]">
+    <div className="px-4 py-2 border-b border-[#2a3038] bg-[#0b0e11]">
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-3">
-          <span className="text-gray-300 font-medium">{symbol}</span>
-          <span className="text-white text-lg font-semibold">
+          <span className="text-[#EAECEF] font-bold text-lg">{symbol}</span>
+          <span className={`text-xl font-semibold ${positive ? "text-[#0ECB81]" : "text-[#F6465D]"}`}>
             {price ? `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "..."}
           </span>
           <span
             className={
-              (positive ? "text-green-400" : "text-red-400") +
-              " text-sm transition-colors duration-300" +
-              (flash ? " bg-yellow-100/20 px-1 rounded" : "")
+              (positive ? "text-[#0ECB81]" : "text-[#F6465D]") +
+              " text-sm font-medium transition-colors duration-300" +
+              (flash ? " opacity-80" : "")
             }
-            style={{
-              transition: "color 0.3s, background 0.3s"
-            }}
           >
             {positive ? "+" : ""}
-            {displayedChange.toFixed(6)}%
+            {displayedChange.toFixed(2)}%
           </span>
-          <span className="text-xs text-blue-400 ml-2">
-            Qty: {latestQty}
+          <span className="text-xs text-[#848E9C] ml-2">
+            24h Vol: {latestQty}
           </span>
         </div>
       </div>

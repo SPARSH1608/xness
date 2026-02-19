@@ -34,10 +34,10 @@ export default function AssetsPanel() {
   }
 
   return (
-    <div className="p-3 bg-black text-white">
+    <div className="p-3 bg-[#0b0e11] text-[#EAECEF]">
       {/* Header */}
       <div className="mb-3">
-        <h2 className="text-sm font-semibold text-gray-300 border-b border-gray-800 pb-2">Assets</h2>
+        <h2 className="text-sm font-semibold text-[#848E9C] border-b border-[#2a3038] pb-2">Assets</h2>
       </div>
 
       {/* Access Section */}
@@ -50,39 +50,37 @@ export default function AssetsPanel() {
             <button
               key={a.id}
               onClick={() => setSymbol(a.id)}
-              className={`w-full text-left p-3 rounded-md border ${
-                isSelected ? "border-green-600 bg-green-900/10" : "border-gray-800 bg-[#0f1318] hover:bg-gray-900"
-              } transition`}
+              className={`w-full text-left p-3 rounded-md border text-sm transition-all ${
+                isSelected 
+                  ? "border-[#0ECB81] bg-[#0ECB81]/10" 
+                  : "border-[#2a3038] bg-[#151a21] hover:bg-[#1e2329]"
+              }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl text-green-400">{a.icon}</span>
+                  <span className={`text-xl ${isSelected ? "text-[#0ECB81]" : "text-[#848E9C]"}`}>{a.icon}</span>
                   <div>
-                    <div className="font-semibold text-gray-100">{a.id}</div>
-                    <div className="text-xs text-gray-500">{a.name}</div>
+                    <div className="font-semibold text-[#EAECEF]">{a.id}</div>
+                    <div className="text-xs text-[#848E9C]">{a.name}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex flex-col items-end space-y-0.5">
+                  <div className="flex flex-col items-end space-y-1">
                     {price !== undefined ? (
                       <>
-                        <span className="text-xs text-gray-400">
-                          <span className="text-green-400 font-semibold">Bid</span>
-                          <span className="ml-1 text-white font-bold">${Number(bid).toFixed(2)}</span>
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          <span className="text-red-400 font-semibold">Ask</span>
-                          <span className="ml-1 text-white font-bold">${Number(ask).toFixed(2)}</span>
-                        </span>
+                        <div className="flex justify-between w-24">
+                          <span className="text-xs text-[#0ECB81] font-medium">Bid</span>
+                          <span className="text-xs text-[#EAECEF] font-bold">${Number(bid).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between w-24">
+                          <span className="text-xs text-[#F6465D] font-medium">Ask</span>
+                          <span className="text-xs text-[#EAECEF] font-bold">${Number(ask).toFixed(2)}</span>
+                        </div>
                       </>
                     ) : (
-                      <span>Loading...</span>
+                      <span className="text-xs text-[#848E9C]">Loading...</span>
                     )}
                   </div>
-                  {/* <div className={`text-xs ${positive ? "text-green-400" : "text-red-400"}`}>
-                    {positive ? "+" : ""}
-                    {change.toFixed(8)}%
-                  </div> */}
                 </div>
               </div>
             </button>

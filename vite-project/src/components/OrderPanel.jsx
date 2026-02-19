@@ -87,190 +87,151 @@ const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
   }
 
   return (
-    <div className="p-4 bg-[#111418] text-gray-100 rounded-md border border-gray-800">
-      <h2 className="text-base font-semibold mb-4 border-b border-gray-800 pb-2">Order Panel</h2>
+    <div className="p-4 bg-[#1e2329] text-[#EAECEF] rounded-md border border-[#2a3038]">
+      <div className="flex items-center justify-between mb-4 border-b border-[#2a3038] pb-3">
+        <h2 className="text-base font-semibold">Place Order</h2>
+      </div>
 
       {/* Long/Short segmented toggle */}
-      <div className="mb-4 grid grid-cols-2 gap-2">
+      <div className="mb-5 grid grid-cols-2 gap-0 bg-[#0b0e11] p-1 rounded-lg">
         <button
           type="button"
-          aria-pressed={side === "buy"}
           onClick={() => setSide("buy")}
-          className={`h-9 rounded-md border text-sm font-medium transition ${
+          className={`h-8 rounded-md text-sm font-medium transition-all ${
             side === "buy"
-              ? "bg-emerald-600 border-emerald-600 text-white"
-              : "bg-[#191e25] border-gray-800 text-gray-300 hover:text-white"
+              ? "bg-[#2a3038] text-[#0ECB81] shadow-sm"
+              : "text-[#848E9C] hover:text-[#EAECEF]"
           }`}
         >
-          Long
+          Buy Left
         </button>
         <button
           type="button"
-          aria-pressed={side === "sell"}
           onClick={() => setSide("sell")}
-          className={`h-9 rounded-md border text-sm font-medium transition ${
+          className={`h-8 rounded-md text-sm font-medium transition-all ${
             side === "sell"
-              ? "bg-red-600 border-red-600 text-white"
-              : "bg-[#191e25] border-gray-800 text-gray-300 hover:text-white"
+              ? "bg-[#2a3038] text-[#F6465D] shadow-sm"
+              : "text-[#848E9C] hover:text-[#EAECEF]"
           }`}
         >
-          Short
+          Sell Right
         </button>
       </div>
 
       {/* Order Type */}
       <div className="mb-4">
-        <label className="block text-xs font-medium mb-2 text-gray-400">Order Type</label>
+        <div className="flex items-center justify-between mb-1.5">
+           <label className="text-xs text-[#848E9C]">Type</label>
+        </div>
         <select
-          className="w-full h-9 px-3 bg-[#191e25] border border-gray-800 rounded-md text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+          className="w-full h-10 px-3 bg-[#2a3038] border border-transparent rounded-md text-[#EAECEF] text-sm focus:outline-none focus:border-[#474d57] transition-colors appearance-none cursor-pointer"
           value={orderType}
           onChange={(e) => setOrderType(e.target.value)}
         >
           <option value="market">Market</option>
           <option value="limit">Limit</option>
-          <option value="stop">Stop</option>
+          <option value="stop">Stop Limit</option>
         </select>
       </div>
 
-      {/* Quantity + Notional hint */}
+      {/* Quantity */}
       <div className="mb-4">
-        <label className="block text-xs font-medium mb-2 text-gray-400">Quantity</label>
-        <input
-          type="number"
-          inputMode="decimal"
-          className="w-full h-9 px-3 bg-[#191e25] border border-gray-800 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          placeholder="0.00"
-          min="0"
-        />
-        <div className="mt-1 text-[11px] text-gray-500">Notional: ${notional.toFixed(2)}</div>
-      </div>
-
-      {/* No Leverage Option */}
-      <div className="mb-2 flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="noLeverage"
-          checked={noLeverage}
-          onChange={(e) => {
-            setNoLeverage(e.target.checked)
-            if (e.target.checked) setLeverage(1)
-          }}
-        />
-        <label htmlFor="noLeverage" className="text-xs text-gray-400 select-none">
-          No leverage (1x)
-        </label>
-      </div>
-
-      {/* Leverage presets + numeric */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-medium text-gray-400">
-            Leverage: {effectiveLeverage}x
-          </label>
+        <div className="flex items-center justify-between mb-1.5">
+           <label className="text-xs text-[#848E9C]">Size</label>
         </div>
-        <div className="grid grid-cols-4 gap-3 mb-2">
-          {[5, 10, 20, 50].map((x) => (
-            <button
-              key={x}
-              type="button"
-              onClick={() => { if (!noLeverage) setLeverage(x) }}
-              className={`h-9 rounded-md border text-sm transition ${
-                leverage === x && !noLeverage ? "border-emerald-600 text-white" : "border-gray-800 text-gray-300 hover:text-white"
-              } bg-[#191e25]`}
-              disabled={noLeverage}
-            >
-              {x}x
-            </button>
+        <div className="relative">
+          <input
+            type="number"
+            inputMode="decimal"
+            className="w-full h-10 px-3 bg-[#2a3038] border border-transparent rounded-md text-[#EAECEF] text-sm placeholder-[#474d57] focus:outline-none focus:border-[#474d57] transition-colors"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            placeholder="Amount"
+            min="0"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#848E9C] font-medium">USDT</span>
+        </div>
+      </div>
+
+      {/* Leverage */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
+           <label className="text-xs text-[#848E9C]">Leverage</label>
+           <span className="text-xs font-medium text-[#EAECEF]">{effectiveLeverage}x</span>
+        </div>
+        
+        <div className="grid grid-cols-5 gap-2 mb-2">
+          {[1, 5, 10, 20, 50].map((x) => (
+             <button
+               key={x}
+               type="button"
+               onClick={() => { setLeverage(x); setNoLeverage(x===1); }}
+               className={`h-7 rounded text-xs font-medium transition-colors ${
+                 effectiveLeverage === x 
+                   ? "bg-[#474d57] text-[#EAECEF]" 
+                   : "bg-[#2a3038] text-[#848E9C] hover:bg-[#353b43]"
+               }`}
+             >
+               {x}x
+             </button>
           ))}
         </div>
-        <input
-          type="number"
-          inputMode="numeric"
-          className="w-full h-9 px-3 bg-[#191e25] border border-gray-800 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:bg-gray-800 disabled:text-gray-500"
-          value={effectiveLeverage}
-          onChange={(e) => setLeverage(Math.max(1, Number.parseInt(e.target.value || "0")))}
-          placeholder="10"
-          min={1}
-          disabled={noLeverage}
-        />
       </div>
 
-      {/* Margin Required (read-only, not user-editable) */}
-      <div className="mb-4">
-        <label className="block text-xs font-medium mb-2 text-gray-400">Margin Required (USDT)</label>
-        <input
-          readOnly
-          tabIndex={-1}
-          className="w-full h-9 px-3 bg-gray-800 border border-gray-800 rounded-md text-gray-500 cursor-not-allowed"
-          value={marginRequired ? marginRequired.toFixed(2) : "0.00"}
-        />
-        <div className="mt-1 flex items-center justify-between text-[11px]">
-          <span className="text-gray-500">Available: ${available.toFixed(2)}</span>
-          <span className={sufficient ? "text-emerald-500" : "text-red-500"}>
-            {sufficient ? "✓ Sufficient" : "Insufficient"}
-          </span>
+      {/* Inputs for Stop/Profit */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div>
+          <label className="block text-xs text-[#848E9C] mb-1.5">Stop Loss</label>
+          <input
+            type="number"
+            className="w-full h-9 px-2 bg-[#2a3038] rounded text-sm text-[#EAECEF] border border-transparent focus:border-[#474d57] focus:outline-none"
+            placeholder="Price"
+            value={stopLoss}
+            onChange={(e) => setStopLoss(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-[#848E9C] mb-1.5">Take Profit</label>
+           <input
+            type="number"
+            className="w-full h-9 px-2 bg-[#2a3038] rounded text-sm text-[#EAECEF] border border-transparent focus:border-[#474d57] focus:outline-none"
+            placeholder="Price"
+            value={takeProfit}
+            onChange={(e) => setTakeProfit(e.target.value)}
+          />
         </div>
       </div>
-
-      {/* Stop Loss / Take Profit (Optional) */}
-      <div className="mb-3">
-        <label className="block text-xs font-medium mb-2 text-gray-400">Stop Loss (Optional)</label>
-        <input
-          type="number"
-          inputMode="decimal"
-          className="w-full h-9 px-3 bg-[#191e25] border border-gray-800 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-          value={stopLoss}
-          onChange={(e) => setStopLoss(e.target.value)}
-          placeholder="Stop loss price"
-          min="0"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-xs font-medium mb-2 text-gray-400">Take Profit (Optional)</label>
-        <input
-          type="number"
-          inputMode="decimal"
-          className="w-full h-9 px-3 bg-[#191e25] border border-gray-800 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-          value={takeProfit}
-          onChange={(e) => setTakeProfit(e.target.value)}
-          placeholder="Take profit price"
-          min="0"
-        />
+      
+      {/* Summary */}
+      <div className="mb-5 p-3 bg-[#0b0e11] rounded border border-[#2a3038]">
+         <div className="flex justify-between items-center text-xs mb-1">
+           <span className="text-[#848E9C]">Cost</span>
+           <span className="text-[#EAECEF]">${totalCost.toFixed(2)}</span>
+         </div>
+         <div className="flex justify-between items-center text-xs">
+           <span className="text-[#848E9C]">Available</span>
+           <span className="text-[#EAECEF]">${available.toFixed(2)}</span>
+         </div>
       </div>
 
-      {/* CTA */}
+      {/* Main CTA */}
       <button
-        className={`w-full h-9 rounded-md font-semibold transition ${
-          side === "buy" ? "bg-emerald-600 hover:bg-emerald-500" : "bg-red-600 hover:bg-red-500"
-        } text-white disabled:bg-gray-600 disabled:cursor-not-allowed`}
+        className={`w-full h-11 rounded-md font-bold text-sm transition-all shadow-lg ${
+          side === "buy" 
+            ? "bg-[#0ECB81] hover:brightness-110 text-white" 
+            : "bg-[#F6465D] hover:brightness-110 text-white"
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
         onClick={handlePlaceOrder}
         disabled={!qty || !user || !sufficient}
       >
-        {sideLabel} {qty || 0} {orderType === "market" ? "at Market" : "Order"}
+        {side === "buy" ? "Buy / Long" : "Sell / Short"} {symbol}
       </button>
-
-      {/* Cost Summary */}
-      <div className="mt-4 rounded-md border border-gray-800 bg-[#171b21] px-4 py-3 text-sm">
-        <div className="flex items-center justify-between text-gray-300">
-          <span>Est. Margin:</span>
-          <span>${marginRequired.toFixed(2)}</span>
+      
+      {!sufficient && (
+        <div className="mt-2 text-center text-xs text-[#F6465D]">
+          Insufficient balance
         </div>
-        <div className="flex items-center justify-between text-gray-300">
-          <span>Est. Fee:</span>
-          <span>${fee.toFixed(2)}</span>
-        </div>
-        <div className="mt-1 flex items-center justify-between font-medium">
-          <span>Total Cost:</span>
-          <span>${totalCost.toFixed(2)}</span>
-        </div>
-      </div>
-
-      {/* Foot price line */}
-      <div className="mt-3 text-center text-xs text-gray-500">
-        Current Price: {price ? `$${price.toFixed(2)}` : "Loading..."}
-      </div>
+      )}
     </div>
   )
 }
