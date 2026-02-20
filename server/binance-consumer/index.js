@@ -29,8 +29,29 @@ async function startBatchCycle() {
 
 const tradeBatches = new Map()
 async function startConsumer() {
-  await consumer.connect()
-  await pgClient.connect()
+  let kafkaConnected = false;
+  while (!kafkaConnected) {
+    try {
+      await consumer.connect()
+      kafkaConnected = true;
+      console.log('Binance Consumer: Kafka Connected');
+    } catch (err) {
+      console.error('Binance Consumer: Kafka connection failed, retrying in 5s...', err.message);
+      await new Promise(res => setTimeout(res, 5000));
+    }
+  }
+
+  let pgConnected = false;
+  while (!pgConnected) {
+    try {
+      await pgClient.connect()
+      pgConnected = true;
+      console.log('Binance Consumer: Postgres Connected');
+    } catch (err) {
+      console.error('Binance Consumer: Postgres connection failed, retrying in 5s...', err.message);
+      await new Promise(res => setTimeout(res, 5000));
+    }
+  }
   await consumer.subscribe({ topic: 'binance-trades', fromBeginning: false })
   // console.log('subscribed to topic:binance-trades')
 

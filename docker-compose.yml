@@ -97,6 +97,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      # Optimize for small EC2 instance (t2.micro/small has ~1GB RAM)
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms256M"
     restart: always
     healthcheck:
       test: ["CMD", "bash", "-c", "export KAFKA_BROKER=$(hostname -i); nc -z localhost 9092 || exit 1"]

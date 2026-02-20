@@ -1,10 +1,13 @@
 const { Pool } = require('pg')
+
+const dbHost = process.env.DB_HOST || 'timescaledb';
+const dbUser = process.env.POSTGRES_USER || 'sparsh';
+const dbName = process.env.POSTGRES_DB || 'timescale';
+
+console.log(`[CandleController] Initializing connection to host: ${dbHost}, database: ${dbName}, user: ${dbUser}`);
+
 const pool = new Pool({
-  user: 'sparsh',
-  host: 'localhost',
-  database: 'timescale',
-  password: 'sparsh',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL || `postgresql://${dbUser}:${process.env.POSTGRES_PASSWORD || 'sparsh'}@${dbHost}:5432/${dbName}?schema=public`
 })
 
 const viewMap = {
