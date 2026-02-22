@@ -1,6 +1,6 @@
 const { Pool } = require('pg')
 
-const dbHost = process.env.DB_HOST || 'timescaledb';
+const dbHost = process.env.DB_HOST || 'localhost';
 const dbUser = process.env.POSTGRES_USER || 'sparsh';
 const dbName = process.env.POSTGRES_DB || 'timescale';
 

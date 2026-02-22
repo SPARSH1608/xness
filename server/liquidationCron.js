@@ -17,7 +17,7 @@ const io = new Server(server, {
 
 const kafkaClient = new Kafka({
   clientId: 'positions',
-  brokers: ["localhost:9092"],
+  brokers: [(process.env.KAFKA_BROKER || "localhost:9092")],
 });
 const kafkaProducer = kafkaClient.producer();
 kafkaProducer.connect().catch(console.error);

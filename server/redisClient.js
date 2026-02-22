@@ -1,6 +1,6 @@
 const { createClient } = require('redis');
 
-const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' });
+const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
 redis.on('error', (err) => {
   // Suppress immediate crashes, but log
   console.error('Redis Client Error (will retry)', err.message);

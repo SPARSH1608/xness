@@ -2,7 +2,7 @@ const WebSocket = require('ws')
 const assets = ['btcusdt', 'ethusdt', 'solusdt']
 
 const { createClient } = require('redis')
-const redisClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6380' })
+const redisClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' })
 
 
 const { Kafka } = require('kafkajs')

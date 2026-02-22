@@ -8,13 +8,17 @@ const kafkaClient = new Kafka({
 })
 const consumer = kafkaClient.consumer({ groupId: 'trade-group' })
 
-const pgClient = new Client({
-  user: process.env.DB_USER || 'sparsh',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'timescale',
-  password: process.env.DB_PASSWORD || 'sparsh',
-  port: process.env.DB_PORT || 5432,
-})
+const pgClientConfig = process.env.DATABASE_URL
+  ? { connectionString: process.env.DATABASE_URL }
+  : {
+    user: process.env.DB_USER || 'sparsh',
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_NAME || 'timescale',
+    password: process.env.DB_PASSWORD || 'sparsh',
+    port: process.env.DB_PORT || 5432,
+  };
+
+const pgClient = new Client(pgClientConfig)
 
 async function startBatchCycle() {
   while (true) {

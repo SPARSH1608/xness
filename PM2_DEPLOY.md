@@ -2,6 +2,58 @@
 
 This guide provides a professional, production-grade workflow using Nginx as a reverse proxy with SSL.
 
+---
+
+## ⚡ Master Command List (Run in Order)
+
+### Part A: Local Environment (Fix Git First)
+Run these on your local machine to stop tracking secret files:
+```bash
+git rm --cached .env
+git rm --cached vite-project/.env
+git commit -m "Stop tracking environment files"
+git push origin your-branch
+```
+
+### Part B: EC2 Setup (Infrastructure & Proxy)
+SSH into your EC2 and run these:
+```bash
+# 1. Update and install dependencies
+sudo apt update && sudo apt install -y nginx certbot python3-certbot-nginx nodejs npm
+sudo npm install -g pm2
+
+# 2. Start core databases (Docker)
+# (Run in root xness folder)
+docker compose -f docker-compose.infra.yml up -d
+
+# 3. Setup Nginx for your domain
+sudo nano /etc/nginx/sites-available/xness
+# (Paste config from Step 2 below)
+sudo ln -s /etc/nginx/sites-available/xness /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl restart nginx
+
+# 4. Get SSL Certificate
+sudo certbot --nginx -d yourdomain.com -d api-xness.yourdomain.com
+```
+
+### Part C: EC2 Setup (Application)
+```bash
+# 5. Install Backend dependencies
+cd server
+npm install
+
+# 6. Push DB Schema
+npx prisma db push
+
+# 7. Start everything with PM2
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup
+```
+
+---
+
 ## 🟢 Production Architecture
 
 ```mermaid
