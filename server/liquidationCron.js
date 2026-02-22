@@ -1,7 +1,7 @@
 require('dotenv').config()
 const prisma = require('./prismaClient');
 const redis = require('./redisClient');
-const { Kafka } = require('kafkajs');
+const { Kafka, Partitioners } = require('kafkajs');
 const cron = require('node-cron');
 const { Server } = require('socket.io')
 const express = require('express')
@@ -19,7 +19,7 @@ const kafkaClient = new Kafka({
   clientId: 'positions',
   brokers: [(process.env.KAFKA_BROKER || "localhost:9092")],
 });
-const kafkaProducer = kafkaClient.producer();
+const kafkaProducer = kafkaClient.producer({ createPartitioner: Partitioners.LegacyPartitioner });
 kafkaProducer.connect().catch(console.error);
 
 const kafkaConsumer = kafkaClient.consumer({ groupId: 'liquidation-group' });

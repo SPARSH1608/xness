@@ -5,13 +5,13 @@ const { createClient } = require('redis')
 const redisClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' })
 
 
-const { Kafka } = require('kafkajs')
+const { Kafka, Partitioners } = require('kafkajs')
 
 const kafkaClient = new Kafka({
     clientId: 'binance-publisher',
     brokers: [(process.env.KAFKA_BROKER || "localhost:9092")],
 })
-const producer = kafkaClient.producer()
+const producer = kafkaClient.producer({ createPartitioner: Partitioners.LegacyPartitioner })
 
 module.exports.startBinanceStreams = async () => {
     let redisConnected = false;
@@ -58,6 +58,7 @@ module.exports.startBinanceStreams = async () => {
             //    console.log(`New trade in ${asset} stream:`, message)
             //    console.log(`Publishing message to Redis and Kafka`)
             try {
+                // console.log(`[Publisher] Publishing ${asset} trade to Redis/Kafka`);
                 await redisClient.publish('trades', message)
                 await redisClient.set(`price:${asset.toUpperCase()}`, tradeData.p);
                 await producer.send({

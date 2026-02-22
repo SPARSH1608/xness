@@ -36,7 +36,6 @@ sudo nginx -t && sudo systemctl restart nginx
 # 4. Get SSL Certificate
 sudo certbot --nginx -d yourdomain.com -d api-xness.yourdomain.com
 ```
-
 ### Part C: EC2 Setup (Application)
 ```bash
 # 5. Install Backend dependencies

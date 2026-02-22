@@ -24,14 +24,24 @@ async function startBatchCycle() {
   while (true) {
     for (const [asset, trades] of tradeBatches.entries()) {
       if (trades.length === 0) continue;
+      console.log(`[Consumer] Processing batch for ${asset}: ${trades.length} trades`);
       await insertBatch(asset, trades);
       tradeBatches.set(asset, []);
     }
-    await new Promise(res => setTimeout(res, 20000));
+    await new Promise(res => setTimeout(res, 5000)); // Reduced to 5s for faster debugging
   }
 }
 
 const tradeBatches = new Map()
+const messageStats = { btcusdt: 0, ethusdt: 0, solusdt: 0 }
+
+setInterval(() => {
+  console.log(`[Consumer Stats] Last 10s: BTC: ${messageStats.btcusdt}, ETH: ${messageStats.ethusdt}, SOL: ${messageStats.solusdt}`);
+  messageStats.btcusdt = 0;
+  messageStats.ethusdt = 0;
+  messageStats.solusdt = 0;
+}, 10000);
+
 async function startConsumer() {
   let kafkaConnected = false;
   while (!kafkaConnected) {
@@ -62,14 +72,27 @@ async function startConsumer() {
   startBatchCycle()
   await consumer.run({
     eachMessage: async ({ message }) => {
-      const tradeString = message.value.toString()
-      const trade = JSON.parse(tradeString)
-      // console.log('received trade')
+      try {
+        const tradeString = message.value.toString()
+        const trade = JSON.parse(tradeString)
 
-      if (!tradeBatches.has(trade.asset)) {
-        tradeBatches.set(trade.asset, [])
+        const asset = trade.asset ? trade.asset.toLowerCase() : 'unknown';
+        if (messageStats[asset] !== undefined) {
+          messageStats[asset]++;
+        }
+
+        if (asset === 'ethusdt') {
+          // Optional: log every 10th ETH trade for high-frequency assets
+          // if (messageStats.ethusdt % 10 === 0) process.stdout.write('E');
+        }
+
+        if (!tradeBatches.has(asset)) {
+          tradeBatches.set(asset, [])
+        }
+        tradeBatches.get(asset).push(trade)
+      } catch (err) {
+        console.error('[Consumer] Error processing single message:', err.message);
       }
-      tradeBatches.get(trade.asset).push(trade)
     }
   })
 }
@@ -91,7 +114,7 @@ async function insertBatch(asset, trades) {
     try {
       await pgClient.query(query, values);
     } catch (err) {
-      console.error('Error inserting trade:', err);
+      console.error(`[Consumer] Error inserting trade for ${asset}:`, err.message);
     }
   }
 }
