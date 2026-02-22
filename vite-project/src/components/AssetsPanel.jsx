@@ -34,58 +34,61 @@ export default function AssetsPanel() {
   }
 
   return (
-    <div className="p-3 bg-[#0b0e11] text-[#EAECEF]">
-      {/* Header */}
-      <div className="mb-3">
-        <h2 className="text-sm font-semibold text-[#848E9C] border-b border-[#2a3038] pb-2">Assets</h2>
+    <div className="bg-white text-slate-900">
+      {/* Search Bar already in TradePage sidebar, but we can add a mini header if needed */}
+      <div className="p-4 border-b border-slate-100">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Market Assets</h2>
       </div>
 
-      {/* Access Section */}
-      <div className="space-y-2">
-        {assets.map((a) => {
-          const isSelected = symbol === a.id
-          const { price, change, bid, ask } = getAssetStats(a.id)
-          const positive = change >= 0
-          return (
-            <button
-              key={a.id}
-              onClick={() => setSymbol(a.id)}
-              className={`w-full text-left p-3 rounded-md border text-sm transition-all ${
-                isSelected 
-                  ? "border-[#0ECB81] bg-[#0ECB81]/10" 
-                  : "border-[#2a3038] bg-[#151a21] hover:bg-[#1e2329]"
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <span className={`text-xl ${isSelected ? "text-[#0ECB81]" : "text-[#848E9C]"}`}>{a.icon}</span>
-                  <div>
-                    <div className="font-semibold text-[#EAECEF]">{a.id}</div>
-                    <div className="text-xs text-[#848E9C]">{a.name}</div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="divide-y divide-slate-50">
+          {assets.map((a) => {
+            const isSelected = symbol === a.id
+            const { price, change, bid, ask } = getAssetStats(a.id)
+            return (
+              <button
+                key={a.id}
+                onClick={() => setSymbol(a.id)}
+                className={`w-full text-left p-4 transition-all group ${
+                  isSelected 
+                    ? "bg-brand-50" 
+                    : "hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                      isSelected ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-brand-100 group-hover:text-brand-600 transition-colors"
+                    }`}>
+                      {a.icon}
+                    </div>
+                    <div>
+                      <div className={`font-bold ${isSelected ? "text-brand-700" : "text-slate-900"}`}>{a.id}</div>
+                      <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">{a.name}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex flex-col items-end space-y-1">
+                  <div className="text-right">
                     {price !== undefined ? (
-                      <>
-                        <div className="flex justify-between w-24">
-                          <span className="text-xs text-[#0ECB81] font-medium">Bid</span>
-                          <span className="text-xs text-[#EAECEF] font-bold">${Number(bid).toFixed(2)}</span>
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-mono font-bold text-slate-900">${Number(price).toFixed(2)}</div>
+                        <div className="flex items-center justify-end gap-1.5 font-mono text-[10px]">
+                           <span className="text-trade-up font-bold">B: {Number(bid).toFixed(2)}</span>
+                           <span className="text-trade-down font-bold">A: {Number(ask).toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between w-24">
-                          <span className="text-xs text-[#F6465D] font-medium">Ask</span>
-                          <span className="text-xs text-[#EAECEF] font-bold">${Number(ask).toFixed(2)}</span>
-                        </div>
-                      </>
+                      </div>
                     ) : (
-                      <span className="text-xs text-[#848E9C]">Loading...</span>
+                      <div className="flex gap-1">
+                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            </button>
-          )
-        })}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

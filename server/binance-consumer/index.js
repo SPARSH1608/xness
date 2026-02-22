@@ -98,24 +98,26 @@ async function startConsumer() {
 }
 
 async function insertBatch(asset, trades) {
+  if (trades.length === 0) return;
+
+  const placeholders = [];
+  const values = [];
+
+  trades.forEach((trade, i) => {
+    const offset = i * 4;
+    placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`);
+    values.push(asset, trade.price, trade.quantity, new Date(trade.tradeTime));
+  });
+
   const query = `
     INSERT INTO trades (asset, price, quantity, trade_time)
-    VALUES ($1, $2, $3, $4)
+    VALUES ${placeholders.join(', ')}
   `;
 
-  for (const trade of trades) {
-    const values = [
-      asset,
-      trade.price,
-      trade.quantity,
-      new Date(trade.tradeTime),
-    ];
-
-    try {
-      await pgClient.query(query, values);
-    } catch (err) {
-      console.error(`[Consumer] Error inserting trade for ${asset}:`, err.message);
-    }
+  try {
+    await pgClient.query(query, values);
+  } catch (err) {
+    console.error(`[Consumer] Error in bulk insert for ${asset}:`, err.message);
   }
 }
 

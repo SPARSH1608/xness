@@ -10,6 +10,23 @@
   --color-down: #F6465D;
   --text-primary: #EAECEF;
   --text-secondary: #848E9C;
+
+  /* Brand Colors */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
+
+  /* Trade Colors */
+  --color-trade-up: #10b981;
+  --color-trade-down: #ef4444;
 }
 
 body {

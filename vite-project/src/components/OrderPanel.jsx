@@ -87,151 +87,162 @@ const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
   }
 
   return (
-    <div className="p-4 bg-[#1e2329] text-[#EAECEF] rounded-md border border-[#2a3038]">
-      <div className="flex items-center justify-between mb-4 border-b border-[#2a3038] pb-3">
-        <h2 className="text-base font-semibold">Place Order</h2>
+    <div className="p-6 bg-white shrink-0 h-full overflow-y-auto">
+      <div className="flex bg-slate-100 p-1 rounded-lg mb-6">
+        <button 
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${orderType === 'market' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+          onClick={() => setOrderType('market')}
+        >
+          Market
+        </button>
+        <button 
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${orderType === 'limit' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+          onClick={() => setOrderType('limit')}
+        >
+          Limit
+        </button>
+        <button 
+          className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${orderType === 'stop' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+          onClick={() => setOrderType('stop')}
+        >
+          Stop
+        </button>
       </div>
 
-      {/* Long/Short segmented toggle */}
-      <div className="mb-5 grid grid-cols-2 gap-0 bg-[#0b0e11] p-1 rounded-lg">
+      <div className="grid grid-cols-2 gap-2 mb-6">
         <button
-          type="button"
           onClick={() => setSide("buy")}
-          className={`h-8 rounded-md text-sm font-medium transition-all ${
+          className={`py-2 rounded-xl text-sm font-bold transition-all border-2 ${
             side === "buy"
-              ? "bg-[#2a3038] text-[#0ECB81] shadow-sm"
-              : "text-[#848E9C] hover:text-[#EAECEF]"
+              ? "bg-trade-up/10 border-trade-up text-trade-up"
+              : "bg-slate-50 border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
-          Buy Left
+          LONG
         </button>
         <button
-          type="button"
           onClick={() => setSide("sell")}
-          className={`h-8 rounded-md text-sm font-medium transition-all ${
+          className={`py-2 rounded-xl text-sm font-bold transition-all border-2 ${
             side === "sell"
-              ? "bg-[#2a3038] text-[#F6465D] shadow-sm"
-              : "text-[#848E9C] hover:text-[#EAECEF]"
+              ? "bg-trade-down/10 border-trade-down text-trade-down"
+              : "bg-slate-50 border-transparent text-slate-400 hover:text-slate-600"
           }`}
         >
-          Sell Right
+          SHORT
         </button>
       </div>
 
-      {/* Order Type */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-           <label className="text-xs text-[#848E9C]">Type</label>
+      <div className="space-y-4">
+        {orderType !== 'market' && (
+          <div>
+            <div className="flex justify-between text-xs text-slate-500 mb-1.5 font-medium uppercase tracking-wider">
+              <span>Price</span>
+              <span>USDT</span>
+            </div>
+            <div className="relative">
+              <input 
+                type="text" 
+                defaultValue={price.toFixed(2)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-right pr-12 text-slate-900"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-sans font-medium">USDT</div>
+            </div>
+          </div>
+        )}
+
+        <div>
+          <div className="flex justify-between text-xs text-slate-500 mb-1.5 font-medium uppercase tracking-wider">
+            <span>Size</span>
+            <span>USDT</span>
+          </div>
+          <div className="relative">
+            <input 
+              type="number" 
+              inputMode="decimal"
+              placeholder="0.00"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-right pr-12 text-slate-900"
+            />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-sans font-medium">USDT</div>
+          </div>
         </div>
-        <select
-          className="w-full h-10 px-3 bg-[#2a3038] border border-transparent rounded-md text-[#EAECEF] text-sm focus:outline-none focus:border-[#474d57] transition-colors appearance-none cursor-pointer"
-          value={orderType}
-          onChange={(e) => setOrderType(e.target.value)}
+
+        <div>
+          <div className="flex justify-between text-xs text-slate-500 mb-2 font-medium uppercase tracking-wider">
+            <span>Leverage</span>
+            <span className="text-slate-900">{effectiveLeverage}x</span>
+          </div>
+          <div className="grid grid-cols-5 gap-1.5">
+            {[1, 5, 10, 20, 50].map((x) => (
+              <button
+                key={x}
+                type="button"
+                onClick={() => { setLeverage(x); setNoLeverage(x===1); }}
+                className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  effectiveLeverage === x 
+                    ? "bg-slate-900 text-white" 
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }`}
+              >
+                {x}x
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div>
+            <label className="block text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">Stop Loss</label>
+            <input
+              type="number"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-slate-900"
+              placeholder="None"
+              value={stopLoss}
+              onChange={(e) => setStopLoss(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] text-slate-500 mb-1.5 font-bold uppercase tracking-wider">Take Profit</label>
+            <input
+              type="number"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all text-slate-900"
+              placeholder="None"
+              value={takeProfit}
+              onChange={(e) => setTakeProfit(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Margin Required</span>
+            <span className="font-mono font-bold text-slate-900">${marginRequired.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Available</span>
+            <span className="font-mono font-bold text-slate-900">${available.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <button
+          className={`w-full py-4 rounded-2xl font-bold text-sm transition-all shadow-lg ${
+            side === "buy" 
+              ? "bg-trade-up hover:bg-emerald-600 text-white shadow-trade-up/20" 
+              : "bg-trade-down hover:bg-red-600 text-white shadow-trade-down/20"
+          } disabled:opacity-50 disabled:cursor-not-allowed mt-4`}
+          onClick={handlePlaceOrder}
+          disabled={!qty || !user || !sufficient || loading}
         >
-          <option value="market">Market</option>
-          <option value="limit">Limit</option>
-          <option value="stop">Stop Limit</option>
-        </select>
-      </div>
-
-      {/* Quantity */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-           <label className="text-xs text-[#848E9C]">Size</label>
-        </div>
-        <div className="relative">
-          <input
-            type="number"
-            inputMode="decimal"
-            className="w-full h-10 px-3 bg-[#2a3038] border border-transparent rounded-md text-[#EAECEF] text-sm placeholder-[#474d57] focus:outline-none focus:border-[#474d57] transition-colors"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Amount"
-            min="0"
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#848E9C] font-medium">USDT</span>
-        </div>
-      </div>
-
-      {/* Leverage */}
-      <div className="mb-5">
-        <div className="flex items-center justify-between mb-2">
-           <label className="text-xs text-[#848E9C]">Leverage</label>
-           <span className="text-xs font-medium text-[#EAECEF]">{effectiveLeverage}x</span>
-        </div>
+          {side === "buy" ? "Open Long" : "Open Short"} {symbol}
+        </button>
         
-        <div className="grid grid-cols-5 gap-2 mb-2">
-          {[1, 5, 10, 20, 50].map((x) => (
-             <button
-               key={x}
-               type="button"
-               onClick={() => { setLeverage(x); setNoLeverage(x===1); }}
-               className={`h-7 rounded text-xs font-medium transition-colors ${
-                 effectiveLeverage === x 
-                   ? "bg-[#474d57] text-[#EAECEF]" 
-                   : "bg-[#2a3038] text-[#848E9C] hover:bg-[#353b43]"
-               }`}
-             >
-               {x}x
-             </button>
-          ))}
-        </div>
+        {!sufficient && user && (
+          <div className="text-center text-xs text-trade-down font-medium animate-pulse">
+            Insufficient balance for this margin
+          </div>
+        )}
       </div>
-
-      {/* Inputs for Stop/Profit */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        <div>
-          <label className="block text-xs text-[#848E9C] mb-1.5">Stop Loss</label>
-          <input
-            type="number"
-            className="w-full h-9 px-2 bg-[#2a3038] rounded text-sm text-[#EAECEF] border border-transparent focus:border-[#474d57] focus:outline-none"
-            placeholder="Price"
-            value={stopLoss}
-            onChange={(e) => setStopLoss(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-[#848E9C] mb-1.5">Take Profit</label>
-           <input
-            type="number"
-            className="w-full h-9 px-2 bg-[#2a3038] rounded text-sm text-[#EAECEF] border border-transparent focus:border-[#474d57] focus:outline-none"
-            placeholder="Price"
-            value={takeProfit}
-            onChange={(e) => setTakeProfit(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      {/* Summary */}
-      <div className="mb-5 p-3 bg-[#0b0e11] rounded border border-[#2a3038]">
-         <div className="flex justify-between items-center text-xs mb-1">
-           <span className="text-[#848E9C]">Cost</span>
-           <span className="text-[#EAECEF]">${totalCost.toFixed(2)}</span>
-         </div>
-         <div className="flex justify-between items-center text-xs">
-           <span className="text-[#848E9C]">Available</span>
-           <span className="text-[#EAECEF]">${available.toFixed(2)}</span>
-         </div>
-      </div>
-
-      {/* Main CTA */}
-      <button
-        className={`w-full h-11 rounded-md font-bold text-sm transition-all shadow-lg ${
-          side === "buy" 
-            ? "bg-[#0ECB81] hover:brightness-110 text-white" 
-            : "bg-[#F6465D] hover:brightness-110 text-white"
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
-        onClick={handlePlaceOrder}
-        disabled={!qty || !user || !sufficient}
-      >
-        {side === "buy" ? "Buy / Long" : "Sell / Short"} {symbol}
-      </button>
-      
-      {!sufficient && (
-        <div className="mt-2 text-center text-xs text-[#F6465D]">
-          Insufficient balance
-        </div>
-      )}
     </div>
   )
 }
