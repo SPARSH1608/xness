@@ -1,19 +1,7 @@
 version: '3.8'
 
 services:
-  # --- Frontend ---
-  frontend:
-    build:
-      context: ./vite-project
-      args:
-        # Pass build args from the .env file
-        VITE_BASE_API_URL: ${VITE_BASE_API_URL}
-        VITE_SOCKET_URL: ${VITE_SOCKET_URL}
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-    restart: always
+
 
   # --- Backend Services ---
   
