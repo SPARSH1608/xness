@@ -29,6 +29,14 @@ io.on('connection', (socket) => {
 })
 app.use(cors()) // <-- add this line before your routes
 app.use(express.json())
+
+app.get('/', (req, res) => {
+    res.status(200).send('Xness API is running!')
+})
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' })
+})
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/candles', require('./routes/candles'))
 app.use('/api/positions', require('./routes/positions'))
