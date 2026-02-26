@@ -1,11 +1,11 @@
 const prisma = require('../prismaClient');
 const redis = require('../redisClient');
-const { Kafka } = require('kafkajs')
+const { Kafka, Partitioners } = require('kafkajs')
 const kafkaClient = new Kafka({
   clientId: 'positions',
-  brokers: ["localhost:9092"],
+  brokers: [process.env.KAFKA_BROKER || "localhost:9092"],
 })
-const kafkaProducer = kafkaClient.producer();
+const kafkaProducer = kafkaClient.producer({ createPartitioner: Partitioners.LegacyPartitioner });
 // POST /positions/long
 
 async function createLongPosition(req, res) {
