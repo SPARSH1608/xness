@@ -140,7 +140,7 @@ services:
       - ./server/scripts/attach-timescale-policies.sql:/docker-entrypoint-initdb.d/002_policies.sql:ro
     restart: always
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-sparsh}"]
       interval: 5s
       timeout: 5s
       retries: 20
