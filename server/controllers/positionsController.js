@@ -1,16 +1,16 @@
 const prisma = require('../prismaClient');
 const redis = require('../redisClient');
-const {Kafka} =require('kafkajs')
-const kafkaClient=new Kafka({
+const { Kafka } = require('kafkajs')
+const kafkaClient = new Kafka({
   clientId: 'positions',
-   brokers: ["localhost:9092"],
+  brokers: ["localhost:9092"],
 })
 const kafkaProducer = kafkaClient.producer();
 // POST /positions/long
 
 async function createLongPosition(req, res) {
   const userId = Number(req.user.userId);
-  const { asset, leverage = 1, quantity, stopLoss, takeProfit } = req.body; 
+  const { asset, leverage = 1, quantity, stopLoss, takeProfit } = req.body;
 
   try {
     const priceStr = await redis.get(`price:${asset}`);
@@ -29,7 +29,7 @@ async function createLongPosition(req, res) {
     }
 
     const finalMargin = (finalQuantity * price) / finalLeverage;
-    const fee = price * 0.01 * finalQuantity; // 1% fee on notional
+    const fee = price * 1 * finalQuantity;
 
     const position = await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { userId } });
@@ -53,8 +53,8 @@ async function createLongPosition(req, res) {
           type: "long",
           status: "open",
           fee,
-          stopLoss: stopLoss ? Number(stopLoss) : null,       
-          takeProfit: takeProfit ? Number(takeProfit) : null, 
+          stopLoss: stopLoss ? Number(stopLoss) : null,
+          takeProfit: takeProfit ? Number(takeProfit) : null,
         },
       });
     });
@@ -65,7 +65,7 @@ async function createLongPosition(req, res) {
         { key: String(position.positionId), value: JSON.stringify({ positionId: position.positionId }) }
       ]
     });
-    console.log('passed to kafka',position)
+    console.log('passed to kafka', position)
     res.json(position);
   } catch (err) {
     res.status(400).json({ error: err.message || "Order failed" });
@@ -97,14 +97,14 @@ async function closePosition(req, res) {
     if (!pos) return res.status(404).json({ error: "Position not found" });
     if (pos.userId !== userId) return res.status(403).json({ error: "Forbidden" });
     if (pos.status !== "open") return res.status(400).json({ error: "Position not open" });
-console.log('position',pos)
+    console.log('position', pos)
     // Get current price from Redis
     const priceStr = await redis.get(`price:${pos.asset}`);
     if (!priceStr) return res.status(500).json({ error: "Price unavailable" });
     const currentPrice = parseFloat(priceStr);
 
-    // Calculate 1% fee
-    const fee = currentPrice * 0.01;
+    // Calculate 0.5% fee
+    const fee = currentPrice * 0.005;
     const effectivePrice = currentPrice - fee;
 
     // Leverage
@@ -162,7 +162,7 @@ async function createShortPosition(req, res) {
     }
 
     const finalMargin = (finalQuantity * price) / finalLeverage;
-    const fee = price * 0.01 * finalQuantity; // 1% fee on notional
+    const fee = price * 0.005 * finalQuantity; // 0.5% fee on notional
 
     const position = await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { userId } });
@@ -191,12 +191,12 @@ async function createShortPosition(req, res) {
       });
     });
     await kafkaProducer.connect().catch(console.error);
-await kafkaProducer.send({
-  topic: 'open-positions',
-  messages: [
-    { key: String(position.positionId), value: JSON.stringify({ positionId: position.positionId }) }
-  ]
-});
+    await kafkaProducer.send({
+      topic: 'open-positions',
+      messages: [
+        { key: String(position.positionId), value: JSON.stringify({ positionId: position.positionId }) }
+      ]
+    });
     res.json(position);
   } catch (err) {
     res.status(400).json({ error: err.message || "Order failed" });
@@ -220,8 +220,8 @@ async function closeShortPosition(req, res) {
     if (!priceStr) return res.status(500).json({ error: "Price unavailable" });
     const currentPrice = parseFloat(priceStr);
 
-    // 1% fee
-    const fee = currentPrice * 0.01;
+    // 0.5% fee
+    const fee = currentPrice * 0.005;
     const effectivePrice = currentPrice - fee;
 
     const lev = Number(pos.leverage) || 1;

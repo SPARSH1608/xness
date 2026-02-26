@@ -16,6 +16,7 @@ export default function OrderPanel() {
   const [stopLoss, setStopLoss] = useState("")
   const [takeProfit, setTakeProfit] = useState("")
   const [noLeverage, setNoLeverage] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const price = Number(prices[symbol] ?? 0)
   const qty = Number.parseFloat(quantity) || 0
@@ -24,8 +25,7 @@ export default function OrderPanel() {
   // Calculate margin on frontend
   const effectiveLeverage = noLeverage ? 1 : leverage
   const marginRequired = useMemo(() => (effectiveLeverage > 0 ? notional / effectiveLeverage : 0), [notional, effectiveLeverage])
-  const fee = useMemo(() => notional * 0.001, [notional]) // 0.10%
-
+  const fee = useMemo(() => notional * 1, [notional]) 
   const totalCost = marginRequired + fee
   const available = user?.balance ?? 0
   const requiredBalance = marginRequired * effectiveLeverage + fee;
@@ -34,26 +34,29 @@ export default function OrderPanel() {
 
   const sideLabel = side === "buy" ? "LONG" : "SHORT"
 
+  const [modalContext, setModalContext] = useState(null)
+
   const handlePlaceOrder = async () => {
     if (!user) {
-      alert("Please login to place orders")
+      setModalContext({ type: "error", message: "Please login to place orders" })
       return
     }
     if (!qty || qty <= 0) {
-      alert("Enter a valid quantity")
+      setModalContext({ type: "error", message: "Enter a valid quantity" })
       return
     }
     // Check margin before sending request
-  if (!sufficient) {
-  alert(`You need at least $${requiredBalance.toFixed(2)} to open this position (margin * leverage + fee).`);
-  return;
-}
+    if (!sufficient) {
+      setModalContext({
+        type: "error",
+        message: `You need at least $${requiredBalance.toFixed(2)} to open this position (margin * leverage + fee).`
+      })
+      return;
+    }
+    setLoading(true)
     try {
-   const endpoint =
-  side === "buy"
-    ? "/positions/createLong"
-    : "/positions/createShort";
-const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
+      const endpoint = side === "buy" ? "/positions/createLong" : "/positions/createShort";
+      const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,22 +72,26 @@ const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || "Order failed")
+        setModalContext({ type: "error", message: data.error || "Order failed" })
         return
       }
-      alert("Order placed successfully!")
+      setModalContext({ type: "success", message: "Order placed successfully!" })
       setStopLoss("")
       setTakeProfit("")
       await refreshUser();
       // Optionally: refresh user balance and positions here
     } catch (err) {
-      alert("Error placing order")
+      setModalContext({ type: "error", message: "Error placing order" })
+    } finally {
+      setLoading(false)
     }
   }
 
   const onSelectLev = (x) => {
     setLeverage(x)
   }
+
+  const closeModal = () => setModalContext(null)
 
   return (
     <div className="p-6 bg-white shrink-0 h-full overflow-y-auto">
@@ -228,8 +235,8 @@ const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
         <button
           className={`w-full py-4 rounded-2xl font-bold text-sm transition-all shadow-lg ${
             side === "buy" 
-              ? "bg-trade-up hover:bg-emerald-600 text-white shadow-trade-up/20" 
-              : "bg-trade-down hover:bg-red-600 text-white shadow-trade-down/20"
+              ? "bg-trade-up hover:bg-emerald-600 text-slate-900 shadow-trade-up/20" 
+              : "bg-trade-down hover:bg-red-600 text-slate-900 shadow-trade-down/20"
           } disabled:opacity-50 disabled:cursor-not-allowed mt-4`}
           onClick={handlePlaceOrder}
           disabled={!qty || !user || !sufficient || loading}
@@ -243,6 +250,45 @@ const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
           </div>
         )}
       </div>
+
+      {/* Modal */}
+      {modalContext && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className={`p-6 ${modalContext.type === "success" ? "bg-emerald-50" : "bg-red-50"}`}>
+              <div className="flex justify-center mb-4">
+                {modalContext.type === "success" ? (
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <h3 className="text-lg font-bold text-center text-slate-900 mb-2">
+                {modalContext.type === "success" ? "Success" : "Error"}
+              </h3>
+              <p className="text-sm text-center text-slate-600">
+                {modalContext.message}
+              </p>
+            </div>
+            <div className="p-4 bg-white border-t border-slate-100">
+              <button
+                onClick={closeModal}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-xl transition-colors text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

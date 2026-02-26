@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   BarChart2, 
   Bell, 
@@ -29,6 +29,8 @@ import RecentTrades from "../components/RecentTrades"
 export default function TradePage() {
   const { user, logout, loading, positions } = useUser();
   const { prices, symbol } = useMarket();
+  const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // Balance & PnL Logic from TopBar
   const openPositions = useMemo(
@@ -44,7 +46,12 @@ export default function TradePage() {
       const entry = Number(pos.boughtPrice);
       const qty = Number(pos.quantity);
       const lev = Number(pos.leverage) || 1;
-      const pnl = (Number(currentPrice) - entry) * qty * lev;
+      
+      // Calculate diff based on type
+      const isShort = pos.type === "short";
+      const diff = isShort ? (entry - Number(currentPrice)) : (Number(currentPrice) - entry);
+      const pnl = diff * qty * lev;
+      
       return sum + pnl;
     }, 0);
   }, [openPositions, prices]);
@@ -63,18 +70,12 @@ export default function TradePage() {
             </div>
             <span className="text-xl font-bold tracking-tight hidden sm:block">Xness+</span>
           </Link>
-          
-          <div className="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-            <button className="px-4 py-1.5 text-sm font-medium bg-white shadow-sm rounded-md text-slate-900">Trade</button>
-            <button className="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Markets</button>
-            <button className="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Earn</button>
-          </div>
         </div>
-
+          
         <div className="flex items-center gap-4">
           {user ? (
-            <div className="hidden lg:flex items-center gap-4 mr-4">
-              <div className="text-right">
+            <div className="flex items-center gap-4">
+              <div className="hidden lg:block text-right mr-2">
                 <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">Live Balance</div>
                 <div className={`font-mono font-bold ${liveBalance >= fixedBalance ? "text-trade-up" : "text-trade-down"}`}>
                   ${liveBalance.toFixed(2)}
@@ -83,6 +84,9 @@ export default function TradePage() {
               <button className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
                 Deposit
               </button>
+              <button onClick={() => setShowLogoutModal(true)} className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 border border-slate-200 rounded-lg">
+                Logout
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -90,17 +94,6 @@ export default function TradePage() {
                <Link to="/signup" className="text-sm font-medium bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800">Signup</Link>
             </div>
           )}
-          
-          <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
-          
-          <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full border-2 border-white"></span>
-          </button>
-          <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors" onClick={logout}>
-            <Settings className="w-5 h-5" />
-          </button>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-400 to-blue-500 border-2 border-white shadow-sm cursor-pointer"></div>
         </div>
       </header>
 
@@ -119,11 +112,11 @@ export default function TradePage() {
               />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
             <AssetsPanel />
-          </div>
-          <div className="h-48 border-t border-slate-200 overflow-y-auto p-2">
-            <RecentTrades />
+            <div className="h-128 border-t border-slate-200 shrink-0 overflow-y-auto">
+              <RecentTrades />
+            </div>
           </div>
         </div>
 
@@ -152,6 +145,47 @@ export default function TradePage() {
           <OrderPanel />
         </div>
       </main>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-center text-slate-900 mb-2">
+                Confirm Logout
+              </h3>
+              <p className="text-sm text-center text-slate-600 mb-6">
+                Are you sure you want to log out of your account?
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors text-sm"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

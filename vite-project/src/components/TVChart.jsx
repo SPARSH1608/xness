@@ -39,13 +39,7 @@ export default function TVChart() {
         vertLines: { color: "#1e2329" },
         horzLines: { color: "#1e2329" },
       },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: "#2a3038",
-        tickMarkColor: "#2a3038",
-        rightOffset: 5,
-      },
+
       rightPriceScale: {
         borderColor: "#2a3038",
         textColor: "#848E9C",

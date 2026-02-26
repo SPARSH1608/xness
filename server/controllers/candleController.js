@@ -1,4 +1,5 @@
 const { Pool } = require('pg')
+const redisClient = require('../redisClient')
 
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbUser = process.env.POSTGRES_USER || 'sparsh';
@@ -60,4 +61,22 @@ async function getCandleData(req, res) {
     res.status(500).send('Error fetching OHLC data')
   }
 }
-module.exports = { getCandleData }
+
+async function getPrices(req, res) {
+  try {
+    const assets = ['btc', 'eth', 'sol'];
+    const prices = {};
+    for (const asset of assets) {
+      const price = await redisClient.get(`${asset}_price`);
+      if (price) {
+        prices[`${asset.toUpperCase()}USDT`] = price;
+      }
+    }
+    res.json(prices);
+  } catch (error) {
+    console.error('Error fetching prices from Redis:', error);
+    res.status(500).json({ error: 'Failed to fetch prices' });
+  }
+}
+
+module.exports = { getCandleData, getPrices }

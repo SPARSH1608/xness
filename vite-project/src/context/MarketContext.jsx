@@ -29,12 +29,25 @@ export function MarketProvider({ children }) {
   const [loadingCandles, setLoadingCandles] = useState(true)
   const [liveCandle, setLiveCandle] = useState(null)
 
-  // Update socket room when symbol changes
+  // Fetch initial prices instantly via REST API
   useEffect(() => {
-    if (symbol) {
-      joinAssetRoom(symbol.toLowerCase())
-    }
-  }, [symbol, joinAssetRoom])
+    const fetchInitialPrices = async () => {
+      if (!API_BASE) return;
+      try {
+        const res = await fetch(`${API_BASE}/candles/prices`);
+        if (res.ok) {
+          const data = await res.json();
+          // Update prices without overwriting any that might have already come via WS
+          setPrices(prev => ({ ...data, ...prev }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial prices:", err);
+      }
+    };
+    fetchInitialPrices();
+  }, []);
+
+  // Socket now joins all rooms initially via SocketContext
 
   // Fetch candle data from API only
   useEffect(() => {

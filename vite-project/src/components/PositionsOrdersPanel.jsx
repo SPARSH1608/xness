@@ -13,6 +13,9 @@ const TABS = [
 
 export default function PositionsOrdersPanel() {
   const [tab, setTab] = useState("positions")
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, position: null })
+  const [closing, setClosing] = useState(false)
+  
   const { positions, refreshPositions, loadingPositions, user, refreshUser } = useUser()
   const { prices } = useMarket()
   const { liquidated } = useSocket(); // <-- get liquidated event
@@ -29,48 +32,33 @@ export default function PositionsOrdersPanel() {
     }
   }, [liquidated, refreshPositions, refreshUser]);
 
-  async function handleClosePosition(positionId) {
+  async function confirmClosePosition() {
+    if (!confirmModal.position) return;
+    setClosing(true);
+    const pos = confirmModal.position;
+    
     try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}/positions/closeLong`, {
+      const endpoint = pos.type === "short" ? "/positions/closeShort" : "/positions/closeLong";
+      const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ positionId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        await refreshPositions();
-        await refreshUser(); // <-- Refresh user balance after closing position
-        // Optionally show a toast or notification
-      } else {
-        alert(data.error || "Failed to close position");
-      }
-    } catch (err) {
-      alert("Failed to close position");
-    }
-  }
-
-  async function handleCloseShortPosition(positionId) {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_API_URL}/positions/closeShort`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ positionId }),
+        body: JSON.stringify({ positionId: pos.positionId }),
       });
       const data = await res.json();
       if (res.ok) {
         await refreshPositions();
         await refreshUser();
       } else {
-        alert(data.error || "Failed to close short position");
+        alert(data.error || "Failed to close position");
       }
     } catch (err) {
-      alert("Failed to close short position");
+      alert("Failed to close position");
+    } finally {
+      setClosing(false);
+      setConfirmModal({ isOpen: false, position: null });
     }
   }
 
@@ -80,7 +68,15 @@ export default function PositionsOrdersPanel() {
     const entry = Number(pos.boughtPrice)
     const qty = Number(pos.quantity)
     const lev = Number(pos.leverage) || 1
-    const pnl = (Number(currentPrice) - entry) * qty * lev
+    
+    // Calculate PnL diff based on long/short
+    const isShort = pos.type === "short"
+    const diff = isShort ? (entry - Number(currentPrice)) : (Number(currentPrice) - entry)
+    
+    const pnl = diff * qty * lev
+    
+    // Avoid -0.00 display
+    if (Math.abs(pnl) < 0.01) return "0.00"
     return pnl.toFixed(2)
   }
 
@@ -154,7 +150,7 @@ export default function PositionsOrdersPanel() {
                   <td className="px-2 py-3 font-mono">
                     <button
                       className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                      onClick={() => pos.type === "short" ? handleCloseShortPosition(pos.positionId) : handleClosePosition(pos.positionId)}
+                      onClick={() => setConfirmModal({ isOpen: true, position: pos })}
                     >
                       Close
                     </button>
@@ -221,6 +217,63 @@ export default function PositionsOrdersPanel() {
           </table>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && confirmModal.position && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-center text-slate-900 mb-2">
+                Confirm Close
+              </h3>
+              <p className="text-sm text-center text-slate-600 mb-4">
+                Are you sure you want to close your {confirmModal.position.type.toUpperCase()} position on {confirmModal.position.asset}?
+              </p>
+              
+              <div className="bg-slate-50 rounded-xl p-3 mb-6 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Entry Price</span>
+                  <span className="font-mono font-medium">${Number(confirmModal.position.boughtPrice).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Current Price</span>
+                  <span className="font-mono font-medium">${getCurrentPrice(confirmModal.position)}</span>
+                </div>
+                <div className="flex justify-between border-t border-slate-200 pt-2 mt-2">
+                  <span className="font-medium text-slate-900">Estimated PnL</span>
+                  <span className={`font-mono font-bold ${getPnL(confirmModal.position) > 0 ? "text-trade-up" : getPnL(confirmModal.position) < 0 ? "text-trade-down" : "text-slate-900"}`}>
+                    ${getPnL(confirmModal.position)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmModal({ isOpen: false, position: null })}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm"
+                  disabled={closing}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmClosePosition}
+                  className="flex-1 py-2.5 bg-brand-500 hover:bg-brand-600 text-slate-900 font-bold rounded-xl transition-colors text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={closing}
+                >
+                  {closing ? "Closing..." : "Confirm Close"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

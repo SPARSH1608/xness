@@ -14,13 +14,11 @@ export const SocketProvider = ({children}) => {
         setSocket(s)
         s.on('connect', () => {
             setConnected(true)
-            // Emit joinRoom ONLY after connection is established and socket is ready
-            // We might need to handle this via the joinAssetRoom function or rethink the logic slightly
-            // But for now, let's keep it simple as before, but note that `currentAsset` dependency might be needed
+            // Join all known asset rooms so prices update everywhere
             console.log('Socket connected:', s.id)
-            if (currentAsset) {
-                 s.emit('joinRoom', currentAsset)
-            }
+            s.emit('joinRoom', 'btcusdt')
+            s.emit('joinRoom', 'ethusdt')
+            s.emit('joinRoom', 'solusdt')
         })
         s.on('disconnect', () => {
             setConnected(false)

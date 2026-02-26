@@ -120,6 +120,7 @@ Run Certbot to automatically fetch and install an SSL certificate:
 ```bash
 sudo certbot --nginx -d yourdomain.com
 ```
+sudo certbot --nginx -d api-flowai.sparsh.space
 
 > [!TIP]
 > Choose the option to **Redirect all HTTP traffic to HTTPS**.
