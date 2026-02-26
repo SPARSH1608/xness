@@ -13,7 +13,11 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - ./server/.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:29092
     depends_on:
       - timescaledb
       - redis
@@ -27,10 +31,12 @@ services:
       context: ./server
     command: node binance-consumer/index.js
     env_file:
-      - .env
+      - ./server/.env
     environment:
       # Explicitly map generic vars to what the consumer expects if needed,
       # but the consumer code now reads these specific names (REDIS_URL, KAFKA_BROKER, etc.)
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:29092
       # We just need to make sure DB_USER etc are present if the consumer uses them.
       # The consumer uses: DB_USER, DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT
       # So we map them from our .env values:
@@ -51,7 +57,11 @@ services:
       context: ./server
     command: node liquidationCron.js
     env_file:
-      - .env
+      - ./server/.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB}?schema=public
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:29092
     depends_on:
       - timescaledb
     restart: always
